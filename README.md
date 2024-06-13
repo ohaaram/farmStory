@@ -1,5 +1,7 @@
 # farmStory
 
+![메인](https://github.com/ohaaram/farmStory/assets/22510560/4e49ce9d-f169-4d6e-a486-ba742adb845e)
+
 
 
 

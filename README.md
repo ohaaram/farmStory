@@ -1,6 +1,6 @@
 # farmStory
 
-<img src="https://github.com/ohaaram/farmStory/assets/22510560/4e49ce9d-f169-4d6e-a486-ba742adb845e" width="400">
+<img src="https://github.com/ohaaram/farmStory/assets/22510560/4e49ce9d-f169-4d6e-a486-ba742adb845e" width="400" height="200">
 
 
 ![상품상세보기](https://github.com/ohaaram/farmStory/assets/22510560/46ccc73b-587f-4507-b8ce-2deb4a1ed68c)

@@ -1,5 +1,9 @@
 # farmStory
 
+<img src="https://github.com/ohaaram/farmStory/assets/22510560/4e49ce9d-f169-4d6e-a486-ba742adb845e" width="300" height="400" style="margin: 10px;">
+
+
+
 ## 프로젝트 소개
 - Spring 웹 쇼핑몰
 
@@ -38,7 +42,7 @@
 
 <div style="display: flex; flex-wrap: wrap; gap: 10px;">
 
-<img src="https://github.com/ohaaram/farmStory/assets/22510560/4e49ce9d-f169-4d6e-a486-ba742adb845e" width="300" height="400" style="margin: 10px;">
+
 <img src="https://github.com/ohaaram/farmStory/assets/22510560/46ccc73b-587f-4507-b8ce-2deb4a1ed68c" width="300" height="400" style="margin: 10px;">
 <img src="https://github.com/ohaaram/farmStory/assets/22510560/0a1ace69-0cec-4fba-bde2-834874ce755d" width="300" height="400" style="margin: 10px;">
 <img src="https://github.com/ohaaram/farmStory/assets/22510560/2224455e-8c77-48e1-b565-1bcbaac2625d" width="300" height="400" style="margin: 10px;">

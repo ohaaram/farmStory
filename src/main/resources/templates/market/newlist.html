@@ -1,0 +1,124 @@
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{/layout/newUserLayout}">
+
+<div class="container" layout:fragment="content">
+<script>
+    window.onload = function (){
+        const marketListCate = document.getElementsByClassName('marketListCate')[0];
+        const productCate = document.getElementsByClassName('productCate')[0];
+        const btnCate = document.getElementsByClassName('btnCate');
+
+        // cateOn
+        if (marketListCate.value == null || marketListCate.value === ""){
+            btnCate[0].classList.add('cateOn');
+        }else if (marketListCate.value === '야채'){
+            btnCate[1].classList.add('cateOn');
+        }else if (marketListCate.value === '과일'){
+            btnCate[2].classList.add('cateOn');
+        }else if (marketListCate.value === '곡류'){
+            btnCate[3].classList.add('cateOn');
+        }else if (marketListCate.value === '기타'){
+            btnCate[4].classList.add('cateOn');
+        }
+    }
+</script>
+    <main class="articleMain">
+        <div class="sideBox">
+            <img th:src="@{/newimage/farm_market_logo.png}" alt="">
+            <ul>
+                <li><a class="tabOn" th:href="@{/market/newlist}">장보기</a></li>
+                <li><a class="" th:if="${#authorization.expression('isAuthenticated()')}" th:href="@{/market/newcart(uid=${#authentication.principal.user.uid})}">장바구니</a></li>
+                <li><a class="" th:if="${!#authorization.expression('isAuthenticated()')}" th:href="@{/user/login}">장바구니</a></li>
+                <li><a class="" th:if="${#authorization.expression('isAuthenticated()')}" th:href="@{/market/orderList(uid=${#authentication.principal.user.uid}, pg=1)}">주문조회</a></li>
+                <li><a class="" th:if="${!#authorization.expression('isAuthenticated()')}" th:href="@{/user/login/}">주문조회</a></li>
+            </ul>
+        </div>
+
+        <div class="contentBox">
+            <div class="articleHeader">
+                <h2>장보기</h2>
+                <h5>HOME > 장보기 > <span>장보기</span></h5>
+            </div>
+
+            <div class="articleBox">
+                <div class="pordCateBox marketInfo">
+
+                    <div class="productCate">
+                        <a th:href="@{/market/newlist}" class="btnCate">전체</a>
+                        <a th:href="@{/market/newlist(cate=야채)}" class="btnCate">야채</a>
+                        <a th:href="@{/market/newlist(cate=과일)}" class="btnCate">과일</a>
+                        <a th:href="@{/market/newlist(cate=곡류)}" class="btnCate">곡류</a>
+                        <a th:href="@{/market/newlist(cate=기타)}" class="btnCate">기타</a>
+
+                        <form class="marketSearch" th:action="@{/market/newlist}">
+                            <input type="hidden" class="marketListCate" name="cate" th:value="${marketPageResponseDTO.cate}">
+                            <label for="marketSearch">
+                                <input type="text" name="keyword" id="marketSearch" placeholder="상품명 검색">
+                                <button><img th:src="@{/newimage/farm_header_search.svg}" alt="button"></button>
+                            </label>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="productBox">
+                    <th:block th:if="${marketPageResponseDTO.dtoList.isEmpty()}">
+                        <a style="width: 100%; height: 40px; text-align: center; padding-top: 20px">
+                            검색 결과가 없습니다. 다시 검색해주세요.
+                        </a>
+                    </th:block>
+                    <th:block th:if="${marketPageResponseDTO.dtoList} != null" th:each="product : ${marketPageResponseDTO.dtoList}" >
+                        <a th:href="@{/market/newview(prodno=${product.prodno},
+                                cate=${marketPageResponseDTO.cate},
+                                type=${marketPageResponseDTO.type},
+                                keyword=${marketPageResponseDTO.keyword})}"
+                           th:attr="href_append=${marketPageResponseDTO.pg != null ? '&pg=' + marketPageResponseDTO.pg : ''}" class="product">
+                            <div>
+                                <img th:src="@{'/imagePath/'+${product.titleImg}}" th:alt="${product.prodname}">
+                            </div>
+                            <div>
+                                <div class="disProd"><span>할인상품</span></div>
+                                <h4 class="title">[[${product.prodname}]]</h4>
+                                <h4 class="amount">
+                                    <span th:if="${product.amount} >= 1000" th:text="(${product.amount}/1000)+'kg'"></span>
+                                    <span th:if="${product.amount} < 1000" th:text="${product.amount}+'g'"></span></h4><br>
+                                <h3 class="discount"><span>[[${product.discount}]]</span>% </h3>
+                                <span class="price"><s data-th-text="${#numbers.formatInteger(product.price, 3, 'COMMA') + '원'}">[[${product.price}]]</s></span><br>
+                                <h3 th:text="${#numbers.formatInteger((product.price - product.price * product.discount / 100), 1, 'COMMA')} + '원'"></h3>
+                                <h5 class="point">
+                                    <span th:text="${#numbers.formatInteger((product.price - (product.price * product.discount / 100)) * 0.10, 0, 'COMMA')} + ' 포인트 적립'"></span>
+                                </h5>
+
+                            </div>
+                        </a>
+                    </th:block>
+                </div>
+
+                <div class="PageBox" th:if="${!marketPageResponseDTO.dtoList.isEmpty()}">
+                    <ul>
+                        <li th:if="${marketPageResponseDTO.prev}">
+                            <a th:if="${marketPageResponseDTO.keyword == null}" th:href="@{/market/newlist(cate=${marketPageResponseDTO.cate}, pg=${marketPageResponseDTO.start - 1})}">이전</a>
+                            <a th:if="${marketPageResponseDTO.keyword != null}" th:href="@{/market/newlist(cate=${marketPageResponseDTO.cate}, pg=${marketPageResponseDTO.start - 1},
+                                                                                    type=${marketPageResponseDTO.type}, keyword=${marketPageResponseDTO.keyword})}">이전</a>
+                        </li>
+
+                        <li th:each="n : ${#numbers.sequence(marketPageResponseDTO.start, marketPageResponseDTO.end)}">
+                            <a th:if="${marketPageResponseDTO.keyword == null}" th:href="@{/market/newlist(cate=${marketPageResponseDTO.cate}, pg=${n})}"
+                               th:classappend="${marketPageResponseDTO.pg == n} ? 'pageOn' : 'page-link'" th:text="${n}"></a>
+                            <a th:if="${marketPageResponseDTO.keyword != null}" th:href="@{/market/newlist(cate=${marketPageResponseDTO.cate}, pg=${n}, type=${marketPageResponseDTO.type}, keyword=${marketPageResponseDTO.keyword})}"
+                               th:classappend="${marketPageResponseDTO.pg == n} ? 'pageOn' : 'page-link'" th:text="${n}"></a>
+                        </li>
+
+                        <li th:if="${marketPageResponseDTO.next}">
+                            <a th:if="${marketPageResponseDTO.keyword == null}" th:href="@{/market/newlist(cate=${marketPageResponseDTO.cate}, pg=${marketPageResponseDTO.end + 1})}">다음</a>
+                            <a th:if="${marketPageResponseDTO.keyword != null}" th:href="@{/market/newlist(cate=${marketPageResponseDTO.cate}, pg=${marketPageResponseDTO.end + 1},
+                                                                                        type=${marketPageResponseDTO.type}, keyword=${marketPageResponseDTO.keyword})}">다음</a>
+                        </li>
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+    </main>
+</div>
+</html>

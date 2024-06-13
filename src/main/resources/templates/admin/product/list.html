@@ -1,0 +1,78 @@
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{/layout/adminLayout}">
+
+    <main layout:fragment="content">
+        <aside>
+            <h3>주요기능</h3>
+            <ul>
+                <li class="on"><a th:href="@{/admin/product/list}">상품관리</a></li>
+                <li><a th:href="@{/admin/order/list}">주문관리</a></li>
+                <li><a th:href="@{/admin/user/list}">회원관리</a></li>
+            </ul>
+        </aside>
+        <section id="productList">
+            <nav>
+                <h3>상품목록</h3>
+            </nav>
+
+            <article>
+
+                <table border="0">
+                    <tr>
+                        <th><input type="checkbox" name="all"/></th>
+                        <th>사진</th>
+                        <th>상품번호</th>
+                        <th>상품명</th>
+                        <th>무게</th>
+                        <th>구분</th>
+                        <th>가격</th>
+                        <th>재고</th>
+                        <th>등록일</th>
+                    </tr>
+                    <tr th:each="product : ${marketPageResponseDTO.dtoList}">
+                        <td><input type="checkbox" name=""/></td>
+                        <td><img th:src="@{'/imagePath/'+${product.thumb}}" class="thumb" alt="샘플1"></td>
+                        <td>[[${product.prodno}]]</td>
+                        <td>[[${product.prodname}]]</td>
+                        <td>
+                            <span th:if="${product.amount} >= 1000" th:text="(${product.amount}/1000)+'kg'"></span>
+                            <span th:if="${product.amount} < 1000" th:text="${product.amount}+'g'"></span>
+                        </td>
+                        <td>[[${product.cate}]]</td>
+                        <td>[[${product.price}]]원</td>
+                        <td>[[${product.stock}]]</td>
+                        <td>[[${product.rdate}]]</td>
+                    </tr>
+                </table>
+
+                <p>
+                    <a href="#" class="productDelete">선택삭제</a>
+                    <a th:href="@{/admin/product/register}" class="productRegister">상품등록</a>
+                </p>
+
+                <p class="paging">
+                    <th:block th:if="${marketPageResponseDTO.prev}">
+                        <a th:if="${marketPageResponseDTO.keyword == null}" th:href="@{/admin/product/list(cate=${marketPageResponseDTO.cate}, pg=${marketPageResponseDTO.start - 1})}">이전</a>
+                        <a th:if="${marketPageResponseDTO.keyword != null}" th:href="@{/admin/product/list(cate=${marketPageResponseDTO.cate}, pg=${marketPageResponseDTO.start - 1},
+                                                                                        type=${marketPageResponseDTO.type}, keyword=${marketPageResponseDTO.keyword})}">이전</a>
+                    </th:block>
+                    <th:block th:each="n : ${#numbers.sequence(marketPageResponseDTO.start, marketPageResponseDTO.end)}">
+                        <a th:if="${marketPageResponseDTO.keyword == null}" th:href="@{/admin/product/list(cate=${marketPageResponseDTO.cate}, pg=${n})}" th:text="${n}"></a>
+                        <a th:if="${marketPageResponseDTO.keyword != null}" th:href="@{/admin/product/list(cate=${marketPageResponseDTO.cate}, pg=${n},
+                                                                    type=${marketPageResponseDTO.type}, keyword=${marketPageResponseDTO.keyword})}" th:text="${n}"></a>
+                    </th:block>
+                    <th:block th:if="${marketPageResponseDTO.next}">
+                        <a th:if="${marketPageResponseDTO.keyword == null}" th:href="@{/admin/product/list(cate=${marketPageResponseDTO.cate}, pg=${marketPageResponseDTO.end + 1})}">다음</a>
+                        <a th:if="${marketPageResponseDTO.keyword != null}" th:href="@{/admin/product/list(cate=${marketPageResponseDTO.cate}, pg=${marketPageResponseDTO.end + 1},
+                                                                                        type=${marketPageResponseDTO.type}, keyword=${marketPageResponseDTO.keyword})}">다음</a>
+                    </th:block>
+                </p>
+
+
+
+            </article>
+
+
+        </section>
+    </main>

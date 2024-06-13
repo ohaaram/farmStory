@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>우주 속으로 사라졌어요</title>
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #0B0C10;
+            color: #C5C6C7;
+            text-align: center;
+            padding-top: 50px;
+        }
+        h1 {
+            color: #66FCF1;
+            font-size: 2em;
+        }
+        p {
+            color: #C5C6C7;
+        }
+        a {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #45A29E;
+            color: white;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        a:hover {
+            background-color: #66FCF1;
+        }
+        .space-img {
+            margin-top: 30px;
+        }
+        .img{
+            width: 700px;
+            height: 700px;
+        }
+
+    </style>
+</head>
+<body>
+
+<h1>404: 별빛 사이로 사라졌어요 🚀</h1>
+<p>찾으시는 페이지가 우주 속으로 사라졌나봐요.</p>
+<a th:href="@{/index}">지구로 돌아가기</a>
+<div class="space-img">
+    <img class="img" th:src="@{/newimage/space.gif}" alt="우주 이미지">
+</div>
+
+</body>
+</html>

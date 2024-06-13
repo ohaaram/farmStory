@@ -1,0 +1,313 @@
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>farmPlus</title>
+    <link rel="stylesheet" th:href="@{/newcss/mainStyle.css}">
+    <script th:inline="javascript">
+        window.onload = function () {
+            const btnCate = document.getElementsByClassName('btnCate');   // 카테고리 버튼 배열
+            const btnProdV = document.getElementById('btnProdV'); // 야채만 조회 버튼
+            const btnProdF = document.getElementById('btnProdF'); // 과일만 조회 버튼
+            const btnProdG = document.getElementById('btnProdG'); // 곡류만 조회 버튼
+            const btnProdE = document.getElementById('btnProdE'); // 기타만 조회 버튼
+            const btnProdAll = document.getElementById('btnProdAll'); // 전체 조회 버튼
+            const productBox = document.getElementsByClassName('productBox')[0]; // 개별 상품 최상위 div 태그
+            const aTageProduct = document.getElementsByClassName('product'); // 개별 상품 a 태그
+
+            // 콤마
+            function numberWithCommas(x) {
+                return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            }
+
+            // 수량
+            function formatAmount(amount) {
+                return amount >= 1000 ? `${numberWithCommas((amount / 1000).toFixed(1))}kg` : `${amount}g`;
+            }
+
+            // 야채 버튼 클릭
+            btnProdV.onclick = function (e) {
+                e.preventDefault();
+                Array.from(aTageProduct).forEach(function (product) {
+                    product.remove();
+                })
+                const cate = "야채";
+                Array.from(btnCate).forEach(function (cate) {
+                    cate.classList.remove('cateOn');
+                })
+                btnCate[1].classList.add('cateOn');
+                selectCate(cate);
+            };
+            // 과일 버튼 클릭
+            btnProdF.onclick = function (e) {
+                e.preventDefault();
+                Array.from(aTageProduct).forEach(function (product) {
+                    product.remove();
+                })
+                const cate = "과일";
+                Array.from(btnCate).forEach(function (cate) {
+                    cate.classList.remove('cateOn');
+                })
+                btnCate[2].classList.add('cateOn');
+                selectCate(cate);
+            };
+            // 곡류 버튼 클릭
+            btnProdG.onclick = function (e) {
+                e.preventDefault();
+                Array.from(aTageProduct).forEach(function (product) {
+                    product.remove();
+                })
+                const cate = "곡류";
+                Array.from(btnCate).forEach(function (cate) {
+                    cate.classList.remove('cateOn');
+                })
+                btnCate[3].classList.add('cateOn');
+                selectCate(cate);
+            };
+            // 기타 버튼 클릭
+            btnProdE.onclick = function (e) {
+                e.preventDefault();
+                Array.from(aTageProduct).forEach(function (product) {
+                    product.remove();
+                })
+                const cate = "기타";
+                Array.from(btnCate).forEach(function (cate) {
+                    cate.classList.remove('cateOn');
+                })
+                btnCate[4].classList.add('cateOn');
+                selectCate(cate);
+            };
+
+            // 전체 버튼 클릭
+            btnProdAll.onclick = function (e) {
+                e.preventDefault();
+                Array.from(aTageProduct).forEach(function (product) {
+                    product.remove();
+                })
+                const cate = "전체";
+                Array.from(btnCate).forEach(function (cate) {
+                    cate.classList.remove('cateOn');
+                })
+                btnCate[0].classList.add('cateOn');
+                selectCate(cate);
+            };
+
+
+            // fetch로 카테고리별 상품 조회해오는 함수
+            function selectCate(cate) {
+                fetch(`/farmstory/index/prodCate/${cate}`)
+                .then(response => response.json())
+                .then(data => {
+                    for (const product of data.productDTOS) {
+
+                        const formattedPrice = numberWithCommas(product.price);
+                        const discountPrice = product.price - (product.price * product.discount / 100);
+                        const formattedDiscountPrice = numberWithCommas(discountPrice.toFixed(0)); // 소수점 이하를 버림하고 포매팅
+                        const formattedAmount = formatAmount(product.amount);
+
+                        const newProduct = `<a class="product" href="/farmstory/market/newview?prodno=${product.prodno}">
+                                                    <div>
+                                                        <img src="/farmstory/imagePath/${product.titleImg}" alt="${product.prodname}">
+                                                    </div>
+                                                    <div>
+                                                        <div class="disProd"><span>할인상품</span></div>
+                                                        <h4 class="title">${product.prodname}</h4>
+                                                       <h4 class="amount">${formattedAmount}</h4><br>
+                                                        <h3 class="discount"><span>${product.discount}</span>% </h3>
+                                                         <span class="price"><s>${formattedPrice}원</s></span><br>
+                                                        <h3>${formattedDiscountPrice}원</h3>
+                                                     </div>
+                                                </a>`;
+
+                        // 태그 문자열 삽입
+                        productBox.insertAdjacentHTML('beforeend', newProduct);
+
+                        // 위치 이동
+                        const pordCateBox = document.getElementsByClassName('pordCateBox')[0];
+                        pordCateBox.scrollIntoView({behavior: "smooth"});
+
+                    }
+                })
+                .catch(err => console.log(err))
+            }
+
+            // 이미지 애니메이션
+            const btnMoveLeftImg = document.getElementsByClassName('btnMoveLeftImg')[0];
+            const btnMoveRightImg = document.getElementsByClassName('btnMoveRightImg')[0];
+            const MoveImg = document.getElementsByClassName('MoveImg')[0];
+
+            btnMoveLeftImg.onclick = function (){
+                const indexMoveBox = document.getElementsByClassName('indexMoveBox')[0];
+                indexMoveBox.style.transform = "translateX(-750px)";
+                indexMoveBox.style.transitionDuration = "1.7s";
+                MoveImg.style.transform = "translateX(-980px)";
+                MoveImg.style.transitionDuration = "2s";
+                btnMoveLeftImg.style.display = "none";
+                setTimeout(function() {
+                    btnMoveRightImg.style.display = "block";
+                }, 1900);
+            }
+
+            btnMoveRightImg.onclick = function (){
+                const indexMoveBox = document.getElementsByClassName('indexMoveBox')[0];
+                indexMoveBox.style.transform = "translateX(0)";
+                indexMoveBox.style.transitionDuration = "1.7s";
+                MoveImg.style.transform = "translateX(0)";
+                MoveImg.style.transitionDuration = "2s";
+                btnMoveRightImg.style.display = "none";
+                setTimeout(function() {
+                    btnMoveLeftImg.style.display = "block";
+                }, 1900);
+            }
+        }
+
+        function notLogin() {
+            console.log("g2");
+            const confirmed = confirm("로그인 후 사용 가능합니다. 로그인 페이지로 이동하시겠습니까?");
+            if (confirmed) {
+                window.location.href = "/farmstory/user/login";
+            }
+        }
+    </script>
+</head>
+<body>
+<div class="container">
+    <header>
+        <div class="userBox">
+            <a th:href="@{/introduction/service}">고객센터</a>
+            <a sec:authorize="isAnonymous()" th:href="@{/user/register}">회원가입 </a>
+            <a class="nav-link" sec:authorize="isAnonymous()" th:href="@{/user/login}">로그인</a>
+            <a class="nav-link" sec:authorize="isAuthenticated()" th:href="@{/user/logout}">로그아웃</a>
+            <a class="nav-link" sec:authorize="hasAnyAuthority('ADMIN')" th:href="@{/admin/index}">관리자</a>
+        </div>
+
+            <div class="logoBox">
+                <a th:href="@{/index}" class="logo"><img th:src="@{/newimage/farm_header_logo.png}" alt="logoImg"></a>
+                
+                <form th:action="@{/market/newlist}">
+                    <label for="indexSearch">
+                        <input type="text" id="indexSearch" name="keyword" placeholder="상품명을 검색해주세요.">
+                        <button><img th:src="@{/newimage/farm_header_search.svg}" alt="button"></button>
+                    </label>
+                </form>
+
+                <!--로그인 안된 경우-->
+                <div class="btnUserBox" th:if="${!#authorization.expression('isAuthenticated()')}">
+                    <a class="btnUser" onclick="notLogin()" style="cursor: pointer">
+                        <img class="btnUserImg1" th:src="@{/newimage/farm_header_cart.png}" alt="cart">
+                        <h5>장바구니</h5>
+                    </a>
+                    <a class="btnUser" onclick="notLogin()" style="cursor: pointer">
+                        <img class="btnUserImg2" th:src="@{/newimage/farm_header_user.png}" alt="">
+                        <h5>마이페이지</h5>
+                    </a>
+                    <a class="btnUser" onclick="notLogin()" style="cursor: pointer">
+                        <img class="btnUserImg3" th:src="@{/newimage/farm_header_order.png}" alt="">
+                        <h5>주문조회</h5>
+                    </a>
+                </div>
+                <!--로그인 된 경우-->
+                <div class="btnUserBox" th:if="${#authorization.expression('isAuthenticated()')}">
+                    <a class="btnUser" th:href="@{/market/newcart(uid=${#authentication.principal.user.uid})}" >
+                        <img class="btnUserImg1" th:src="@{/newimage/farm_header_cart.png}" alt="cart">
+                        <h5>장바구니</h5>
+                    </a>
+                    <a class="btnUser" href=""  th:href="@{/notfound}" >
+                        <img class="btnUserImg2" th:src="@{/newimage/farm_header_user.png}" alt="">
+                        <h5>마이페이지</h5>
+                    </a>
+                    <a class="btnUser" th:href="@{/market/orderList(uid=${#authentication.principal.user.uid}, pg=1)}" >
+                        <img class="btnUserImg3" th:src="@{/newimage/farm_header_order.png}" alt="">
+                        <h5>주문조회</h5>
+                    </a>
+                </div>
+            </div>
+            <div class="navBox">
+                <ul class="gnb">
+                    <li><a th:href="@{/introduction/newHello}">팜스토리소개</a></li>
+                    <li><a th:href="@{/market/newlist}">장보기</a></li>
+                    <li><a th:href="@{/cropTalk/newlist(cate=story)}">농작물이야기</a></li>
+                    <li><a th:href="@{/event/newlist(cate=event)}">이벤트</a></li>
+                    <li><a th:href="@{/community/newlist(cate=notice)}">커뮤니티</a></li>
+                </ul>
+            </div>
+        </header>
+
+        <main>
+            <div class="adBox">
+                <div>
+                    <button class="btnMoveLeftImg"><img th:src="@{/newimage/farm_index_leftArrow.png}"></button>
+                    <button class="btnMoveRightImg"><img th:src="@{/newimage/farm_index_rightArrow.png}"></button>
+                    <div class="indexMoveBox">
+                    </div>
+                    <img class="MoveImg" th:src="@{/newimage/farm_index_moveBg.jpg}" alt="">
+
+                </div>
+
+            </div>
+
+            <div class="bannerBox">
+                <a class="banner1" th:href="@{/community/newlist(cate=menu)}">
+                    <h5>친환경 야채로 만드는 건강한 식탁</h5>
+                    <h3>팜스토리 오늘의 식단</h3>
+                </a>
+                <a class="banner2" th:href="@{/community/newlist(cate=chef)}">
+                    <h5>한달에 한분께 팜스토리 3만원 상품권을 드립니다.</h5>
+                    <h3>팜스토리 나도 요리사</h3>
+                </a>
+            </div>
+
+            <div class="pordCateBox">
+                <h2>최신 상품</h2>
+                <div class="productCate">
+                    <a class="btnCate cateOn" id="btnProdAll" href="">전체</a>
+                    <a class="btnCate" id="btnProdV" href="">야채</a>
+                    <a class="btnCate" id="btnProdF" href="">과일</a>
+                    <a class="btnCate" id="btnProdG" href="">곡류</a>
+                    <a class="btnCate" id="btnProdE" href="">기타</a>
+                    <a href="market/newlist">더보기</a>
+                </div>
+            </div>
+
+            <div class="productBox">
+                <th:block th:each="product : ${productDTOS}">
+                <a class="product" th:href="@{/market/newview(prodno=${product.prodno})}">
+                    <div>
+                        <img th:src="@{'/imagePath/'+${product.titleImg}}" th:alt="${product.prodname}">
+                    </div>
+                    <div>
+                        <div class="disProd"><span>할인상품</span></div>
+                        <h4 class="title">[[${product.prodname}]]</h4>
+                        <h4 class="amount">
+                            <span th:if="${product.amount} >= 1000" th:text="(${product.amount}/1000)+'kg'"></span>
+                            <span th:if="${product.amount} < 1000" th:text="${product.amount}+'g'"></span>
+                        </h4><br>
+                        <h3 class="discount"><span>[[${product.discount}]]</span>% </h3>
+                        <span class="price"><s data-th-text="${#numbers.formatInteger(product.price, 3, 'COMMA') + '원'}"></s></span><br>
+                        <h3 th:text="${#numbers.formatInteger((product.price - product.price * product.discount / 100), 1, 'COMMA')} + '원'"></h3>
+                    </div>
+                </a>
+                </th:block>
+            </div>
+        </main>
+
+        <footer>
+            <div class="footerImgBox">
+                <img th:src="@{newimage/farm_footer_logo.png}" alt="">
+                <img th:src="@{newimage/farm_footer_wood.png}" alt="">
+            </div>
+            <p>
+                (주)팜스토리 / 사업자등록번호 123-45-67890 / 통신판매업신고 제 2013-팜스토리구-123호 / 벤처기업확인 서울지방중소기업청 제 012345678-9-01234호
+                <br>
+                등록번호 팜스토리01234 (2013.04.01) / 발행인 : 홍길동
+                <br>
+                대표 : 홍길동 / 이메일 : email@mail.mail / 전화 : 01) 234-5678 / 경기도 성남시 잘한다구 신난다동 345
+                <br>
+                <em>Copyright(C)홍길동 All rights reserved. [[${appInfo.version}]]</em>
+            </p>
+        </footer>
+    </div>
+</body>
+</html>

@@ -1,0 +1,13 @@
+// 게시판 - 이진씨
+1. 사이드바 tabOn 이상한거 같음
+2. 이벤트 이미지로 구현
+3. 게시판 제목 텍스트로
+4. 팜스토리 소개 변경된 디자인 적용
+5. 리뷰쓰기 등록, 수정, 삭제 버튼
+6. 상품리뷰 밑에 리뷰평균
+
+orderdtail
+int result = select * from `order` as a join `orderdetail` as b on a.orderNo = b.orderNo where a.uid = ?1 and b.prodNo = ?2
+
+
+리뷰 집계하려면 select 두 번해야하는 데 reviewProd DB가 있는게 맞는거같은데 이게 뭐하는 

@@ -1,0 +1,91 @@
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{/layout/userLayout}">
+
+<div class="container" layout:fragment="content">
+
+    <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+    <script th:src="@{/js/social.js}"></script>
+    <main>
+        <div id="user">
+            <div class="register">
+                <form th:action="@{/user/social}" name="registerForm" method="post">
+
+                    <table border="0">
+                        <caption>
+                           필수정보 입력
+                        </caption>
+                        <tr>
+                            <td>아이디</td>
+                            <td>
+                                <input class="form-control" id="inputUid" type="text" name="uid" readonly
+                                       th:value="${userDTO.uid}"/>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>이름</td>
+                            <td>
+                                <input type="text" name="name" th:value="${userDTO.name}"/>
+                                <span id="result_name"></span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>휴대폰</td>
+                            <td>
+                                <input
+                                        type="text"
+                                        id="hp"
+                                        name="hp"
+                                        placeholder="- 포함 13자리 입력"
+                                        minlength="13"
+                                        maxlength="13"
+                                        data-type="hp"
+                                />
+                                <span id="result_hp"></span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>주소</td>
+                            <td>
+                                <div>
+                                    <input
+                                            type="text"
+                                            name="zip"
+                                            id="inputZip"
+                                            placeholder="우편번호"
+                                            readonly
+                                    />
+                                    <button type="button" id="findZip">
+                                        <img th:src="@{/images/user/chk_post.gif}" alt="우편번호 검색"/>
+                                    </button>
+                                </div>
+                                <div>
+                                    <input
+                                            type="text"
+                                            name="addr1"
+                                            id="inputAddr1"
+                                            placeholder="주소를 검색하세요."
+                                            readonly
+                                    />
+                                </div>
+                                <div>
+                                    <input
+                                            type="text"
+                                            name="addr2"
+                                            id="inputAddr2"
+                                            placeholder="상세주소를 입력하세요."
+                                    />
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                    <div>
+                        <input type="submit" class="btnSubmit" value="추가정보 입력"/>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+</div>
+</html>

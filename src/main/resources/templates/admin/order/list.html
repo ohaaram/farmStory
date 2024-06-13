@@ -1,0 +1,75 @@
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{/layout/adminLayout}">
+
+    <main layout:fragment="content">
+        <aside>
+            <h3>주요기능</h3>
+            <ul>
+                <li class="on"><a th:href="@{/admin/product/list}">상품관리</a></li>
+                <li><a th:href="@{/admin/order/list}">주문관리</a></li>
+                <li><a th:href="@{/admin/user/list}">회원관리</a></li>
+            </ul>
+        </aside>
+        <section id="orderList">
+            <nav>
+                <h3>주문목록</h3>
+            </nav>
+
+            <article>
+
+                <table border="0" class="adminTable">
+                    <tr>
+                        <th>순서</th>
+                        <th>주문번호</th>
+                        <th>상품명</th>
+                        <th>무게</th>
+                        <th>판매가격</th>
+                        <th>수량</th>
+                        <th>배송비</th>
+                        <th>합계</th>
+                        <th>주문자</th>
+                        <th>주문일</th>
+                    </tr>
+                    <tr th:each="order, index :${orderListResponseDTO.dtoList}">
+                        <td th:text="${index.index+1}" style="font-weight: bold"></td>
+                        <td>[[${order.orderNO}]]</td>
+                        <td th:text="${order.prodname}">사과 500g</td>
+                        <td>
+                            <span th:if="${order.amount} >= 1000" th:text="(${order.amount}/1000)+'kg'"></span>
+                            <span th:if="${order.amount} < 1000" th:text="${order.amount}+'g'"></span>
+                        </td>
+                        <td th:text="${order.price}">4,000원</td>
+                        <td th:text="${order.count}">2</td>
+                        <td th:text="${order.delCost}">3,000원</td>
+                        <td th:text="${order.sum}">11,000원</td>
+                        <td th:text="${order.name}">김유신</td>
+                        <td th:text="${#temporals.format(order.rdate,'yy-mm-dd hh:mm')}">2023-01-01 13:06:14</td>
+                    </tr>
+                </table>
+
+                <p>
+
+
+
+                </p>
+
+                <p class="paging">
+                    <th:block th:if="${orderListResponseDTO.prev}" class="page-item">
+                        <a class="page-link" th:href="@{/admin/order/list(pg=${orderListResponseDTO.start -1})}">&#60;</a>
+                    </th:block>
+
+
+                    <th:block th:each="num:${#numbers.sequence(orderListResponseDTO.start,orderListResponseDTO.end)}" class="page-item">
+                        <a class="page-link" th:href="@{/admin/order/list(pg=${num})}">[[${num}]]</a>
+                    </th:block>
+
+
+
+                    <th:block th:if="${orderListResponseDTO.next}" class="page-item">
+                        <a class="page-link" th:href="@{/admin/order/list(pg=${orderListResponseDTO.end + 1})}">&#62;</a>
+                    </th:block>
+                </p>
+            </article>
+        </section>
+    </main>

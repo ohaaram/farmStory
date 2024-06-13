@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${title}">팜스토리::사용자</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+
+    <style>
+        #user > img {
+            display: block;
+            margin: 20px auto;
+        }
+        .btn-login:hover {
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+<div id="container">
+    <div style="margin-top: 20px; text-align: center; ">
+        <a th:href="@{/index}"><img th:src="@{/newimage/farm_header_logo.png}" alt="" style="width: 250px;"> </a>
+    </div>
+
+
+    <div layout:fragment="content">
+
+    </div>
+
+</div>
+</body>
+</html>

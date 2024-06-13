@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>회원 상세 정보 - 팜스토리</title>
+    <link rel="stylesheet" th:href="@{/css/adminStyle.css}">
+    <script th:src="@{/js/util.js}"></script>
+</head>
+<script>
+    // 수정
+    document.addEventListener('DOMContentLoaded', function () {
+        document.getElementById('updateBtn').addEventListener('click', function (event) {
+            event.preventDefault();
+            const userInfo = {
+                uid: document.querySelector('input[name="uid"]').value,
+                level: document.querySelector('select[name="level"]').value,
+                role: document.querySelector('select[name="role"]').value
+                // 필요한 나머지 필드도 추가
+            };
+
+            fetch("/farmstory/admin/user/update", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    // CSRF 토큰이 필요하다면 'X-CSRF-TOKEN': token 추가
+                },
+                body: JSON.stringify(userInfo)
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        // 페이지 리로드 또는 다른 페이지로 이동
+                    } else {
+                        alert(data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Fetch Error:', error);
+                    alert('정보 업데이트 중 오류가 발생했습니다.');
+                });
+
+
+        }); // 삭제 버튼 이벤트 리스너 추가
+        document.querySelector('.deleteBtn').addEventListener('click', async function (event) {
+            event.preventDefault();
+            const uid = document.querySelector('input[name="uid"]').value;
+
+            console.log("uid : "+uid);
+
+            alert('클릭이 되었습니다.');
+
+            //role을 Delete로 바꾸기-> 그리고 login으로 이동으로 시키고
+            const data = await fetchGet(`/farmstory/user/delete/${uid}`);
+
+            console.log("여기로는 돌아오니? : "+data.result);
+
+            if(data.result>0){
+                alert("삭제");
+                location.href="/farmstory/admin/user/list";
+            }else{
+                alert("삭제 실패");
+            }
+        });
+    });
+
+</script>
+
+<body>
+
+
+<div id="container">
+    <header>
+        <a th:href="@{/}" class="logo"><img th:src="@{/images/admin/admin_logo.jpg}" alt="로고"/></a>
+        <p>
+            <a th:href="@{/}">HOME |</a>
+            <a th:href="@{/logout}">로그아웃 |</a>
+            <a th:href="@{/support}">고객센터</a>
+        </p>
+    </header>
+    <main>
+        <aside>
+            <h3>주요기능</h3>
+            <ul>
+                <li><a th:href="@{/admin/product/list}">상품관리</a></li>
+                <li><a th:href="@{/admin/order/list}">주문관리</a></li>
+                <li class="on"><a th:href="@{/admin/user/list}">회원관리</a></li>
+            </ul>
+        </aside>
+        <section id="view">
+            <nav>
+                <h3>회원 상세 정보</h3>
+            </nav>
+            <article class="adminUserTable">
+                <form th:action="@{/admin/user/update}" class="btnForm" th:object="${user}" method="post">
+                    <input type="hidden" th:field="*{uid}"/>
+                    <table>
+                        <tr>
+                            <th>항목</th>
+                            <th>정보</th>
+                        </tr>
+                        <tr>
+                            <td>아이디</td>
+                            <td th:text="*{uid}"></td>
+                        </tr>
+                        <tr>
+                            <td>이름</td>
+                            <td th:text="*{name}"></td>
+                        </tr>
+                        <tr>
+                            <td>별명</td>
+                            <td th:text="*{nick}"></td>
+                        </tr>
+                        <tr>
+                            <td>이메일</td>
+                            <td th:text="*{email}"></td>
+                        </tr>
+                        <tr>
+                            <td>휴대폰</td>
+                            <td th:text="*{hp}"></td>
+                        </tr>
+                        <tr>
+                            <td>등급</td>
+                            <td>
+                                <select th:field="*{level}">
+                                    <option th:each="grade : ${#numbers.sequence(1, 5)}"
+                                            th:value="${grade}"
+                                            th:text="${grade}"
+                                            th:selected="${grade == user.level}"></option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>가입일</td>
+                            <td th:text="${#temporals.format(user.regDate, 'yyyy-MM-dd')}"></td>
+                        </tr>
+                        <tr>
+                            <td>권한</td>
+                            <td>
+                                <select th:field="*{role}">
+                                    <option value="USER" th:selected="${user.role == 'USER'}">사용자</option>
+                                    <option value="ADMIN" th:selected="${user.role == 'ADMIN'}">관리자</option>
+                                </select>
+                            </td>
+                        </tr>
+                    </table>
+                    <button type="button" class="updateBtn" id="updateBtn">정보 수정</button>
+                </form>
+                <form th:action="@{/admin/user/delete}" method="post" class="adminUserDelete">
+                    <input type="hidden" th:name="uid" th:value="${user.uid}"/>
+                    <div>
+                        <a href="#" class="deleteBtn">회원 삭제</a>
+                    </div>
+                </form>
+            </article>
+        </section>
+    </main>
+    <footer>
+        <p>Copyright(C)Farmstory All rights reserved. FARMSTORY ADMINISTRATOR Version 1.0.1</p>
+    </footer>
+</div>
+</body>
+</html>

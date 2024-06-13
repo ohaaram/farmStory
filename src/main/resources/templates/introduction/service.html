@@ -1,0 +1,64 @@
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{/layout/newUserLayout}">
+
+<div class="container" layout:fragment="content">
+        <main class="articleMain">
+            <script th:inline="javascript" th:src="@{/js/communityList.js}"></script>
+            <div class="sideBox">
+                <img th:src="@{/images/sub_aside_cate5_tit.png}" alt="커뮤니티"/>
+                <ul class="lnb">
+                    <li id="cateNotice"><a data-cate="notice" th:href="@{/community/newlist(cate=notice)}">공지사항</a></li>
+                    <li id="cateMenu"><a data-cate="menu" th:href="@{/community/newlist(cate=menu)}">오늘의식단</a></li>
+                    <li id="cateChef"><a data-cate="chef" th:href="@{/community/newlist(cate=chef)}">나도요리사</a></li>
+                    <li id="cateQna"><a data-cate="qna" th:href="@{/community/newlist(cate=qna)}">1:1고객문의</a></li>
+                    <li id="cateFaq"><a data-cate="faq" th:href="@{/community/newlist(cate=faq)}">자주묻는질문</a></li>
+                    <li><a data-cate="faq" class="tabOn" th:href="@{/introduction/service}">고객센터</a></li>
+                </ul>
+            </div>
+
+            <div class="contentBox">
+                <div class="articleHeader" id="communityNav">
+                    <h2>고객 문의</h2>
+                    <h5>HOME > 커뮤니티 > <span>고객 문의</span></h5>
+                </div>
+                    <div class="articleInfo" style="border: 0;">
+                        <div style="flex-direction: column; margin-left: 50px;">
+                            <h3 style="padding-bottom: 20px">1:1 상담이 필요하신가요?</h3>
+                                <div style="border: 1px solid #111; border-radius: 10px; padding: 20px; width: 300px; margin-bottom: 20px">
+                                    <h5>일반회원/비회원 이용안내</h5>
+                                    <p style="padding-bottom: 30px"><span style="font-size: 20px; font-weight: bold;">1556-5701</span>(평일 09:00 ~ 18:00)</p>
+                                    <h5>팜스토리 vip 등급 회원 전용 이용 안내</h5>
+                                    <p><span style="font-size: 20px; font-weight: bold;">1556-5700</span>(평일 09:00 ~ 18:00)</p>
+                                </div>
+                            <h3 style="padding-bottom: 20px">판매 상담이 필요하신가요?</h3>
+                                <div style="border: 1px solid #111; border-radius: 10px; padding: 20px; width: 300px;">
+                                    <h5>판매 고객</h5>
+                                    <p style="padding-bottom: 30px"><span style="font-size: 20px; font-weight: bold;">1556-5703</span>(평일 09:00 ~ 18:00)</p>
+                                    <a href="" style="padding-bottom: 30px; display: block"><span style="font-size: 20px; font-weight: bold;">판매자 전용 상담</span>(바로가기)</a>
+                                    <a href="" style="padding-bottom: 10px; display: block"><span style="font-size: 20px; font-weight: bold;">판매자 서류 접수 안내</span>(바로가기)</a>
+                                </div>
+                        </div>
+
+                        <div style="display: flex; border-radius: 10px; flex-direction: column; margin-right: 50px; width: 300px;">
+                            <h3 style="padding-bottom: 20px">1:1 상담이 필요하신가요?</h3>
+                            <div style="background-color: #006cff; display: flex; border-radius: 10px; padding: 20px; width: 260px; height: 100px; margin-bottom: 20px">
+                                <a th:href="@{/community/newlist(cate=qna)}" style="color: white; font-weight: bold; font-size: 18px;">문의글 작성</a>
+                            </div>
+                            <div style="display: flex; border-radius: 10px; width: 300px; height: auto;">
+                                <div style="background-color: #6188e1; display: flex; border-radius: 10px; padding: 20px; width: 170px; height: 100px; margin-right: 20px">
+                                    <a th:href="@{/notfound1}" style="color: white; font-weight: bold; font-size: 18px;">원격지원</a>
+                                </div>
+                                <div style="background-color: #15c068; display: flex; border-radius: 10px; padding: 20px; width: 170px; height: 100px">
+                                    <a th:href="@{/notfound2}" style="color: white; font-weight: bold; font-size: 18px;">신고센터</a>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                <div class="articleBox">
+
+                </div>
+            </div>
+        </main>
+</div>

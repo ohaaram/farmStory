@@ -1,0 +1,132 @@
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{/layout/newUserLayout}">
+
+<div class="order-container" layout:fragment="content">
+
+    <header class="order-header">
+        <h1>주문 목록</h1>
+    </header>
+
+    <nav class="order-nav">
+        <ul>
+            <li><a th:href="@{/market/newlist}">장보기</a></li>
+        </ul>
+    </nav>
+
+    <table class="order-table">
+        <thead>
+        <tr>
+            <th>주문 번호</th>
+            <th>상품명</th>
+            <th>수량</th>
+            <th>가격</th>
+            <th>주문한 총 가격</th>
+            <th>주문 날짜</th>
+            <th>리뷰</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="orderDetail : ${pageResponseDTO.orderDetailList}" style="text-align: center">
+            <td th:text="${orderDetail.orderDetailDTO.orderNo}"></td>
+            <td th:text="${orderDetail.prodName}"></td>
+            <td th:text="${orderDetail.orderDetailDTO.count}"></td>
+            <td th:text="${#numbers.formatInteger(orderDetail.price, 1, 'COMMA')}"></td>
+            <td th:text="${#numbers.formatInteger(orderDetail.totalPrice, 1, 'COMMA')}"></td>
+            <td th:text="${#temporals.format(orderDetail.rdate, 'yyyy-MM-dd')}"></td>
+            <td>
+                <!-- th:text="${#numbers.formatInteger(orderDetail.totalPrice, 1, 'COMMA')}" -->
+
+                <!-- 리뷰 작성 버튼 -->
+                <button class="btn btnReview"
+                        th:data-prodNo="${orderDetail.orderDetailDTO.prodno}"
+                        onclick="openModal(this.getAttribute('data-prodNo'))">리뷰작성
+                </button>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+    <div class="PageBox">
+        <ul>
+            <li th:if="${pageResponseDTO.prev}">
+                <a th:if="${pageResponseDTO.keyword == null}" th:href="@{/market/orderList(uid=${#authentication.principal.user.uid}, pg=${pageResponseDTO.start - 1})}">이전</a>
+            </li>
+            <li th:each="n : ${#numbers.sequence(pageResponseDTO.start, pageResponseDTO.end)}">
+                <a th:if="${pageResponseDTO.keyword == null}" th:href="@{/market/orderList(uid=${#authentication.principal.user.uid}, pg=${n})}" th:text="${n}"></a>
+            </li>
+            <li th:if="${pageResponseDTO.next}">
+                <a th:if="${pageResponseDTO.keyword == null}" th:href="@{/market/orderList(uid=${#authentication.principal.user.uid}, pg=${pageResponseDTO.end + 1})}">다음</a>
+            </li>
+        </ul>
+    </div>
+    <div class="prodWriteReview modal">
+        <form th:action="@{/review}" class="reviewForm" method="post" enctype="multipart/form-data">
+            <p>
+                <input type="hidden" name="uid" th:value="${#authentication.principal.user.uid}">
+                <input type="hidden" name="prodno" id="prodno" readonly>
+                <input type="hidden" name="name" value="홍길동" readonly>
+            <fieldset>
+                <span class="text-bold">별점을 선택해주세요</span>
+                <input type="radio" name="score" value="5" id="rate1"><label
+                    for="rate1">★</label>
+                <input type="radio" name="score" value="4" id="rate2"><label
+                    for="rate2">★</label>
+                <input type="radio" name="score" value="3" id="rate3"><label
+                    for="rate3">★</label>
+                <input type="radio" name="score" value="2" id="rate4"><label
+                    for="rate4">★</label>
+                <input type="radio" name="score" value="1" id="rate5"><label
+                    for="rate5">★</label>
+            </fieldset>
+            <input type="file" name="thumb" id="file" onchange="chkImg(this)" accept=".gif, .jpg, .png, .jpeg, .bmp">
+            </p>
+            <div>
+                <textarea name="comment" placeholder="솔직한 리뷰를 남겨 주시면 팜스토리에 큰 힘이 됩니다!"></textarea>
+            </div>
+            <input class="btn btnRemove" type="submit" value="리뷰등록">
+            <button class="btn btnReview" type="button" onclick="closeModal()">취소</button>
+        </form>
+    </div>
+</div>
+
+</html>
+
+<script>
+    // 리뷰 작성 modal 띄우기
+    function openModal(prodno) {
+        const prodWriteReview = document.querySelector('.prodWriteReview');
+        const prodnoInput = document.getElementById('prodno');
+
+        console.log("openModal : "+prodno);
+        // modal - input 버튼에서 받아 온 prodno 넣어주기
+        prodnoInput.value = prodno;
+        // Modal style : display :none -> display: flex
+        prodWriteReview.style.display="flex";
+    }
+    // Modal 감추기
+    function closeModal(){
+        const prodWriteReview = document.querySelector('.prodWriteReview');
+        // Modal style : display :flex -> display: none
+        prodWriteReview.style.display="none";
+    }
+    // 이미지 파일만 올릴 수 있게 Check
+    function chkImg(obj) {
+        const file_kind = obj.value.lastIndexOf('.');
+        const file_name = obj.value.substring(file_kind+1,obj.length);
+        const file_type = file_name.toLowerCase();
+
+        const chkImg = ['jpg', 'gif', 'png', 'jpeg', 'bmp'];
+
+        // 이미지 파일이 아닌 경우
+        if(chkImg.indexOf(file_type) == -1){
+            alert('이미지 파일만 선택할 수 있습니다.');
+            const parent_Obj = obj.parentNode
+            const node = parent_Obj.replaceChild(obj.cloneNode(true),obj);
+
+            // input 태그 비우기
+            const inputFile = document.getElementById("file").select();
+            inputFile.clear();
+            return false;
+        }
+    }
+</script>

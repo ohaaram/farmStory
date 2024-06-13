@@ -1,0 +1,107 @@
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>farmPlus</title>
+    <link rel="stylesheet" th:href="@{/newcss/mainStyle.css}">
+    <script th:src="@{/js/layoutScript/newUserLayout.js}"></script>
+</head>
+<body>
+<div class="container">
+    <header>
+        <!--로그인 안된 경우-->
+        <div class="userBox" th:if="${!#authorization.expression('isAuthenticated()')}">
+            <a th:href="@{/introduction/service}">고객센터</a>
+            <a th:href="@{/user/register}">회원가입</a>
+            <a th:href="@{/user/login}">로그인</a>
+        </div>
+
+        <!--로그인 된 경우-->
+        <div class="userBox" th:if="${#authorization.expression('isAuthenticated()')}">
+            <a th:href="@{/introduction/service}">고객센터</a>
+            <a th:href="@{/user/logout}">로그아웃</a>
+            <a class="nav-link" sec:authorize="hasAnyAuthority('ADMIN')" th:href="@{/admin/index}">관리자</a>
+        </div>
+
+        <div class="logoBox">
+            <a th:href="@{/index}"><img th:src="@{/newimage/farm_header_logo.png}" alt="logoImg"></a>
+
+            <form th:action="@{/market/newlist}">
+                <label for="indexSearch">
+                    <input type="text" id="indexSearch" name="keyword"  placeholder="상품명을 검색해주세요.">
+                    <button><img th:src="@{/newimage/farm_header_search.svg}" alt="button"></button>
+                </label>
+            </form>
+
+            <!--로그인 안된 경우-->
+            <div class="btnUserBox" th:if="${!#authorization.expression('isAuthenticated()')}">
+                <a class="btnUser" onclick="notLogin()" style="cursor: pointer">
+                    <img class="btnUserImg1" th:src="@{/newimage/farm_header_cart.png}" alt="cart">
+                    <h5>장바구니</h5>
+                </a>
+                <a class="btnUser" onclick="notLogin()" style="cursor: pointer">
+                    <img class="btnUserImg2" th:src="@{/newimage/farm_header_user.png}" alt="">
+                    <h5>마이페이지</h5>
+                </a>
+
+                <a class="btnUser" onclick="notLogin()" style="cursor: pointer" >
+                    <img class="btnUserImg3" th:src="@{/newimage/farm_header_order.png}" alt="">
+                    <h5>주문조회</h5>
+                </a>
+            </div>
+            <!--로그인 된 경우-->
+            <div class="btnUserBox" th:if="${#authorization.expression('isAuthenticated()')}">
+                <a class="btnUser" th:href="@{/market/newcart(uid=${#authentication.principal.user.uid})}" >
+                    <img class="btnUserImg1" th:src="@{/newimage/farm_header_cart.png}" alt="cart">
+                    <h5>장바구니</h5>
+                </a>
+                <a class="btnUser" th:href="@{/notfound}" >
+                    <img class="btnUserImg2" th:src="@{/newimage/farm_header_user.png}" alt="">
+                    <h5>마이페이지</h5>
+                </a>
+                <a class="btnUser" href="" th:href="@{/market/orderList(uid=${#authentication.principal.user.uid}, pg=1)}">
+                    <img class="btnUserImg3" th:src="@{/newimage/farm_header_order.png}" alt="">
+                    <h5>주문조회</h5>
+                </a>
+            </div>
+
+        </div>
+
+        <div class="navBox">
+            <ul>
+                <li><a th:href="@{/introduction/newHello}">팜스토리소개</a></li>
+                <li><a th:href="@{/market/newlist}">장보기</a></li>
+                <li><a th:href="@{/cropTalk/newlist(cate=story)}">농작물이야기</a></li>
+                <li><a th:href="@{/event/newlist(cate=event)}">이벤트</a></li>
+                <li><a th:href="@{/community/newlist(cate=notice)}">커뮤니티</a></li>
+            </ul>
+        </div>
+
+        <div class="bgBox">
+        </div>
+
+    </header>
+    <div layout:fragment="content">
+        <!--내용-->
+    </div>
+    <footer>
+        <div class="footerImgBox">
+            <img th:src="@{/newimage/farm_footer_logo.png}" alt="">
+            <img th:src="@{/newimage/farm_footer_wood.png}" alt="">
+        </div>
+        <p>
+            (주)팜스토리 / 사업자등록번호 123-45-67890 / 통신판매업신고 제 2013-팜스토리구-123호 / 벤처기업확인 서울지방중소기업청 제 012345678-9-01234호
+            <br>
+            등록번호 팜스토리01234 (2013.04.01) / 발행인 : 홍길동
+            <br>
+            대표 : 홍길동 / 이메일 : email@mail.mail / 전화 : 01) 234-5678 / 경기도 성남시 잘한다구 신난다동 345
+            <br>
+            <em>Copyright(C)홍길동 All rights reserved. 0.0.4-SNAPSHOT</em>
+        </p>
+    </footer>
+    <div class="topButton" onclick="movePageTop()">up</div>
+</div>
+</body>
+</html>

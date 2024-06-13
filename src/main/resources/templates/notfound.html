@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>페이지를 찾을 수 없습니다</title>
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+
+            background-color: #F7DAD9;
+
+            background-color: #ffffff;
+
+            text-align: center;
+            padding-top: 100px;
+        }
+        h1 {
+            color: #FF6B6B;
+            font-size: 2em;
+        }
+        p {
+            color: #FFA8A8;
+        }
+        a {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #FF8888;
+            color: white;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        a:hover {
+            background-color: #FF6B6B;
+        }
+        .cute-img {
+            margin-top: 50px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>페이지를 출력할 수 없습니다 😿</h1>
+<p>요청하신 페이지는 현재 준비 중이에요.</p>
+<a th:href="@{/index}">홈으로 돌아가기</a>
+<div class="cute-img">
+    <img th:src="@{/newimage/fire.gif}" alt="귀여운 이미지">
+</div>
+</body>
+</html>
+

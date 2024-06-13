@@ -1,0 +1,68 @@
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{/layout/newUserLayout}">
+
+<div class="container" layout:fragment="content">
+    <main class="articleMain">
+    <script th:inline="javascript" th:src="@{/js/eventModify.js}"></script>
+        <div class="sideBox">
+            <img th:src="@{/images/sub_aside_cate4_tit.png}" alt="이벤트"/>
+            <ul class="lnb">
+                <li><a class="tabOn" th:href="@{/event/newlist(cate=event)}">이벤트</a></li>
+            </ul>
+        </div>
+            <div class="contentBox">
+                <div class="articleHeader" id="communityNav">
+                    <h2>이벤트</h2>
+                    <h5>HOME > 이벤트 > <span>이벤트</span></h5>
+                </div>
+                <!-- 내용 시작 -->
+                <div class="articleBox" id="community_view">
+                    <form class="articleForm" id="communityForm"  th:action="@{/event/newmodify}" method="post" enctype="multipart/form-data">
+                        <!--hidden-->
+                        <input type="hidden" name="cate" th:value="${pageResponseDTO.cate}" id="cate"/>
+                        <input type="hidden" name="pg" th:value="${pageResponseDTO.pg}">
+                        <input type="hidden" name="type" th:value="${pageResponseDTO.type}" th:if="${pageResponseDTO.keyword != null}">
+                        <input type="hidden" name="keyword" th:value="${pageResponseDTO.keyword}" th:if="${pageResponseDTO.keyword != null}">
+                        <input type="hidden" name="ano" th:value="${article.ano}" id="ano"/>
+                        <input type="hidden" name="file" th:value="${article.file}">
+                        <input type="hidden" name="writer" th:value="${#authentication.principal.user.uid}">
+                        <div class="titleBox">
+                            <input class="titleInput" type="text" name="title" th:value="${article.title}">
+                        </div>
+                        <div class="infoBox">
+                            <p>작성자 : <span>[[${article.nick}]]</span></p>
+                            <p>조회수 : <span>[[${article.hit}]]</span>&nbsp;&nbsp;<span th:text="${#temporals.format(article.rdate,'yyyy-MM-dd')}"></span></p>
+                        </div>
+                        <div class="contentsBox">
+                            <textarea id="contentTextarea" name="content">[[${article.content}]]</textarea>
+                        </div>
+                        <!--기존 첨부 파일-->
+                        <div class="fileBox" th:if="${article.file > 0}">
+                            <p>■ 기존 첨부 파일</p>
+                            <th:block  th:each="file:${article.fileList}">
+                                <a th:href="@{/file/fileDownload/{fno}(fno=${file.fno})}" class="fileLink"
+                                   th:data-fno="${file.fno}">[[${file.oName}]]</a>
+                                <button type="button" class="btn-close" aria-label="Close" th:data-fno="${file.fno}"></button>
+                            </th:block>
+                        </div>
+                        <!-- 새 파일첨부 -->
+                        <ul>
+                            <li>
+                                <label for="formFileMultiple" class="form-label">■ 새 첨부 파일 선택</label>
+                                <input class="form-control" type="file" name="files" id="formFileMultiple" multiple>
+                            </li>
+                        </ul>
+                        <div class="articleBtnBox">
+                            <a th:if="${pageResponseDTO.keyword == null}" th:href="@{/event/newlist(cate=${pageResponseDTO.cate}, pg=${pageResponseDTO.pg})}"
+                               class="btn btnCancel">취소</a>
+                            <a th:if="${pageResponseDTO.keyword != null}" th:href="@{/event/newlist(cate=${pageResponseDTO.cate}, pg=${pageResponseDTO.pg}, type=${pageResponseDTO.type}, keyword=${pageResponseDTO.keyword})}"
+                               class="btn btnCancel">취소</a>
+                            <a th:href="@{/event/newmodify}" id="btnSubmit" class="btn btnSubmit">수정</a>
+                        </div>
+                    </form>
+                </div>
+                <!-- 내용 끝 -->
+            </div>
+        </main>
+</div>

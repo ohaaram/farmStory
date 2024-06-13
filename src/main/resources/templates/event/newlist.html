@@ -1,0 +1,154 @@
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{/layout/newUserLayout}">
+
+<div class="container" layout:fragment="content">
+    <script>
+        window.onload = function () {
+            // 현재 시간 가져오기
+            let currentDate = new Date();
+
+            // 모든 articleTable 요소에 대해 반복
+            let articleTables = document.getElementsByClassName('articleTable');
+
+            for (let i = 0 ; i < articleTables.length ; i++) {
+                const artRdate = articleTables[i].dataset.rdate;
+                console.log("1" +artRdate);
+
+                // artRdate JavaScript의 Date 객체로 변환
+                let articleDate = new Date(artRdate);
+                console.log("2" + articleDate);
+
+
+                // 두 날짜의 차이를 계산하여 일(day) 단위로 변환
+                let differenceInMilliseconds = currentDate - articleDate;
+                console.log("3" + differenceInMilliseconds);
+                let differenceInDays = differenceInMilliseconds / (1000 * 60 * 60 * 24);
+                console.log("4" + differenceInDays);
+                // 차이가 48시간 이내인 경우 'NEW'를 추가
+                if (differenceInDays < 2) {
+                    // <img>를 insertAdjacentHTML하면 이미지가 깨져서 hidden 으로 가려놨다가 공개
+                    articleTables[i].querySelector('img').style.visibility = 'visible';
+                }
+            }
+        }
+    </script>
+    <main class="articleMain">
+            <div class="sideBox">
+                <img th:src="@{/images/sub_aside_cate4_tit.png}" alt="이벤트"/>
+                <ul class="lnb">
+                    <li><a class="tabOn" th:href="@{/event/newlist(cate=event)}">이벤트</a></li>
+                </ul>
+            </div>
+
+            <div class="contentBox">
+                <div class="articleHeader" id="communityNav">
+                    <h2>이벤트</h2>
+                    <h5>HOME > 이벤트 > <span>이벤트</span></h5>
+                </div>
+
+                <div class="articleBox">
+                    <div class="articleInfo ">
+                        <h4>총 <span th:text="${pageResponseDTO.total}"></span>건</h4>
+                        <!-- 키워드 검색 -->
+                        <form class="articleSearch" th:action="@{/event/newlist}" id="search-keyword">
+                            <!-- thymeleaf 변수를 js 파일에서 사용하기 위해 input 에 값넣기 -->
+                            <input type="hidden" name="cate" th:value="${pageResponseDTO.cate}" id="cate"/>
+                            <label for="articleSearch">
+                                <select name="type" id="q_searchKeyTy" class="select">
+                                    <option value="title">제목</option>
+                                    <option value="content">내용</option>
+                                    <option value="title_content">제목+내용</option>
+                                    <option value="writer">등록자명</option>
+                                </select>
+                                <!-- 검색어 입력 -->
+                                <input type="text" id="articleSearch" name="keyword">
+                                <button type="submit"><img th:src="@{/newimage/farm_header_search.svg}" alt="button"></button>
+                            </label>
+                        </form>
+                    </div>
+                    <!-- 글 목록 -->
+                    <!-- 전체 조회 -->
+                    <th:block th:each="article, loop:${pageResponseDTO.dtoList}">
+                    <a class="articleTable"  th:if="${pageResponseDTO.keyword == null}" th:href="@{/event/newview(ano=${article.ano}, pg=${pageResponseDTO.pg}, cate=${pageResponseDTO.cate})}" th:data-rdate="${article.rdate}">
+                        <h4>[[${pageResponseDTO.startNo - loop.index}]]</h4>
+                        <div>
+                            <h4>[[${article.title}]] [<span th:text="${article.hit}"></span>]</span></h4>
+                            <h5>
+                                <span th:text="${#temporals.format(article.rdate,'yyyy-MM')}"></span>
+                                <span th:text="${article.nick}"></span>
+                            </h5>
+                        </div>
+                        <img th:src="@{/newimage/new_img.png}" alt="new" style="width: 30px; height: 30px; visibility: hidden">
+                    </a>
+                        <!-- 검색 조회 -->
+                        <a class="articleTable"   th:if="${pageResponseDTO.keyword != null}" th:href="@{/event/newview(ano=${article.ano}, pg=${pageResponseDTO.pg}, cate=${pageResponseDTO.cate}, type=${pageResponseDTO.type}, keyword=${pageResponseDTO.keyword})}">
+                            <h4>[[${pageResponseDTO.startNo - loop.index}]]</h4>
+                            <div>
+                                <h4>[[${article.title}]] [<span th:text="${article.hit}"></span>]</h4>
+                                <h5>
+                                    <span th:text="${#temporals.format(article.rdate,'yyyy-MM')}"></span>
+                                    <span th:text="${article.nick}"></span>
+                                </h5>
+                            </div>
+                            <img th:src="@{/newimage/new_img.png}" alt="new" style="width: 30px; height: 30px; visibility: hidden">
+                        </a>
+                    </th:block>
+                    <div class="PageBox">
+                        <ul class="pagination justify-content-center">
+                            <!-- 첫 페이지 -->
+                            <li class="page-item">
+                                <a th:if="${pageResponseDTO.keyword == null}" class="page-link" th:href="@{/event/newlist(cate=${pageResponseDTO.cate}, pg=1)}" aria-label="firstPage">
+                                    <span aria-hidden="true">&laquo;</span>
+                                </a>
+                                <a th:if="${pageResponseDTO.keyword != null}" class="page-link" th:href="@{/event/newlist(cate=${pageResponseDTO.cate}, pg=1, type=${pageResponseDTO.type}, keyword=${pageResponseDTO.keyword})}" aria-label="firstPage">
+                                    <span aria-hidden="true">&laquo;</span>
+                                </a>
+                            </li>
+                            <!-- 이전 페이지 -->
+                            <li th:if="${pageResponseDTO.prev}" class="page-item">
+                                <a  th:if="${pageResponseDTO.keyword == null}" class="page-link" th:href="@{/event/newlist(cate=${pageResponseDTO.cate}, pg=${pageResponseDTO.start - 1})}">&#60;</a>
+                                <a  th:if="${pageResponseDTO.keyword != null}" class="page-link" th:href="@{/event/newlist(cate=${pageResponseDTO.cate}, pg=${pageResponseDTO.start - 1}, type=${pageResponseDTO.type}, keyword=${pageResponseDTO.keyword})}">&#60;</a>
+                            </li>
+                            <!-- 페이지 넘버 반복 -->
+                            <li class="page-item" th:each="num:${#numbers.sequence(pageResponseDTO.start, pageResponseDTO.end)}">
+                                <a  th:if="${pageResponseDTO.keyword == null}" th:classappend="${pageResponseDTO.pg == num} ? 'page-link pageOn' : 'page-link'" th:href="@{/event/newlist(cate=${pageResponseDTO.cate}, pg=${num})}">
+                                    [[${num}]]
+                                </a>
+                                <a  th:if="${pageResponseDTO.keyword != null}" th:classappend="${pageResponseDTO.pg == num} ? 'page-link pageOn' : 'page-link'" th:href="@{/event/newlist(cate=${pageResponseDTO.cate}, pg=${num}, type=${pageResponseDTO.type}, keyword=${pageResponseDTO.keyword})}">
+                                    [[${num}]]
+                                </a>
+                            </li>
+
+                            <!-- 다음 페이지 -->
+                            <li th:if="${pageResponseDTO.next}" class="page-item">
+                                <a th:if="${pageResponseDTO.keyword == null}" class="page-link" th:href="@{/event/newlist(cate=${pageResponseDTO.cate}, pg=${pageResponseDTO.end + 1})}">&#62;</a>
+                                <a th:if="${pageResponseDTO.keyword != null}" class="page-link" th:href="@{/event/newlist(cate=${pageResponseDTO.cate}, pg=${pageResponseDTO.end + 1}, type=${pageResponseDTO.type}, keyword=${pageResponseDTO.keyword})}">&#62;</a>
+                            </li>
+                            <!-- 마지막 페이지 -->
+                            <li class="page-item">
+                                <a th:if="${pageResponseDTO.keyword == null}" class="page-link" aria-label="last" th:href="@{/event/newlist(cate=${pageResponseDTO.cate}, pg=${pageResponseDTO.last})}">
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a>
+                                <a th:if="${pageResponseDTO.keyword != null}" class="page-link" aria-label="last" th:href="@{/event/newlist(cate=${pageResponseDTO.cate}, pg=${pageResponseDTO.last}, type=${pageResponseDTO.type}, keyword=${pageResponseDTO.keyword})}">
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    <!-- 비로그인 사용자의 경우엔 글쓰기 버튼 노출하지 않음 -->
+                    <th:block th:unless="${#authentication.principal eq 'anonymousUser'}">
+                        <div class="divWrite">
+                            <!-- 관리자가 아닌 사용자의 경우엔 공지사항, 자주묻는질문, 이벤트 글쓰기 버튼 노출하지 않음 -->
+                            <a th:href="@{/event/newwrite(cate=${pageResponseDTO.cate})}"
+                               th:if="${pageResponseDTO.cate != 'notice' and pageResponseDTO.cate != 'faq' and pageResponseDTO.cate != 'event' and #authentication.principal.user.role != 'ADMIN'}"
+                               class="btn btnGoWrite">글쓰기</a>
+                            <a th:href="@{/event/newwrite(cate=${pageResponseDTO.cate})}"
+                               th:if="${#authentication.principal.user.role == 'ADMIN'}"
+                               class="btn btnGoWrite">글쓰기</a>
+                        </div>
+                    </th:block>
+                </div>
+            </div>
+        </main>
+</div>

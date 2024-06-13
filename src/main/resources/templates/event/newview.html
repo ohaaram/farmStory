@@ -1,0 +1,118 @@
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{/layout/newUserLayout}">
+
+<div class="container" layout:fragment="content">
+    <main class="articleMain">
+    <script th:inline="javascript" th:src="@{/js/eventView.js}"></script>
+        <div class="sideBox">
+            <img th:src="@{/images/sub_aside_cate4_tit.png}" alt="이벤트"/>
+            <ul class="lnb">
+                <li><a class="tabOn" th:href="@{/event/newlist(cate=event)}">이벤트</a></li>
+            </ul>
+        </div>
+            <div class="contentBox">
+                <div class="articleHeader" id="communityNav">
+                    <h2>이벤트</h2>
+                    <h5>HOME > 이벤트 > <span>이벤트</span></h5>
+                </div>
+                <!-- 내용 시작 -->
+                <div class="articleBox" id="community_view">
+                    <form class="articleForm" id="communityForm"  th:action="@{/event/newmodify}" method="post" >
+                        <!--hidden-->
+                        <input type="hidden" name="cate"  th:value="${pageResponseDTO.cate}" id="cate"/>
+                        <!-- 로그인 하지 않은 사용자의 경우 principal.user가 없음 -->
+                        <th:block th:unless="${#authentication.principal eq 'anonymousUser'}">
+                            <input type="hidden" th:value="${#authentication.principal.user.uid}" id="user"  >
+                        </th:block>
+                        <input type="hidden" name="type" th:value="${pageResponseDTO.type}" th:if="${pageResponseDTO.keyword != null}">
+                        <div class="titleBox">
+                            <p>[[${article.title}]]</p>
+                        </div>
+
+                        <div class="infoBox">
+                            <p>작성자 : <span>[[${article.nick}]]</span></p>
+                            <p>조회수 : <span>[[${article.hit}]]</span>&nbsp;&nbsp;<span th:text="${#temporals.format(article.rdate,'yyyy-MM-dd')}"></span></p>
+                        </div>
+                        <div class="fileBox">
+                            <img th:src="@{'/imagePath/'+${article.thumbnail}}" th:alt="${article.thumbnail}" alt="">
+                        </div>
+                        <div class="contentsBox">
+                            <textarea id="contentTextarea" readonly>[[${article.content}]]</textarea>
+                        </div>
+                        <!-- 수정 / 삭제 / 목록 버튼 -->
+                        <div class="articleBtnBox">
+                            <!-- 로그인한 사용자 정보가 있는 경우 -->
+                            <th:block th:unless="${#authentication.principal eq 'anonymousUser'}">
+                                <!-- 작성 당사자, 관리자에게만 출력 -->
+                                <th:block th:if="${article.writer} == ${#authentication.principal.user.uid} or ${#authentication.principal.user.role} == 'ADMIN'">
+                                    <a th:if="${pageResponseDTO.keyword == null}"
+                                       th:href="@{/event/newmodify(ano=${article.ano}, cate=${pageResponseDTO.cate}, pg=${pageResponseDTO.pg})}"
+                                       class="btn btn-secondary btn-sm" data-art="artModify">수정</a>
+                                    <a th:if="${pageResponseDTO.keyword != null}"
+                                       th:href="@{/event/newmodify(ano=${article.ano}, cate=${pageResponseDTO.cate}, type=${pageResponseDTO.type},keyword=${pageResponseDTO.keyword}, pg=${pageResponseDTO.pg})}"
+                                       class="btn btn-secondary btn-sm" data-art="artModify">수정</a>
+                                    <!-- 삭제 버튼 -->
+                                    <a th:if="${pageResponseDTO.keyword == null}"
+                                       th:href="@{/event/delete(ano=${article.ano}, cate=${pageResponseDTO.cate}, pg=${pageResponseDTO.pg})}"
+                                       class="btn btn-secondary btn-sm" data-art="artRemove"
+                                       onclick="return confirmDelete()">삭제</a>
+                                    <a th:if="${pageResponseDTO.keyword != null}"
+                                       th:href="@{/event/delete(ano=${article.ano}, cate=${pageResponseDTO.cate}, type=${pageResponseDTO.type},keyword=${pageResponseDTO.keyword}, pg=${pageResponseDTO.pg})}"
+                                       class="btn btn-secondary btn-sm" data-art="artRemove"
+                                       onclick="return confirmDelete()">삭제</a>
+                                </th:block>
+                            </th:block>
+                            <a th:if="${pageResponseDTO.keyword == null}" th:href="@{/event/newlist(cate=${pageResponseDTO.cate}, pg=${pageResponseDTO.pg})}"
+                               class="btn btnList">목록</a>
+                            <a th:if="${pageResponseDTO.keyword != null}" th:href="@{/event/newlist(cate=${pageResponseDTO.cate}, pg=${pageResponseDTO.pg}, type=${pageResponseDTO.type}, keyword=${pageResponseDTO.keyword})}"
+                               class="btn btnList">목록</a>
+                        </div>
+                    </form>
+                    <!-- 댓글쓰기 -->
+                    <div class="commentBox" id="commentBox">
+                        <p>댓글쓰기</p>
+                        <form th:action="@{/comment}"  name="commentForm" method="post" id="commentForm">
+                            <th:block th:unless="${#authentication.principal eq 'anonymousUser'}">
+                                <input type="hidden" name="uid" th:value="${#authentication.principal.user.uid}">
+                            </th:block>
+                            <input type="hidden" name="ano" th:value="${article.ano}" id="ano"/>
+                            <textarea name="content" class="commentContent"></textarea>
+                            <div>
+                                <button id="btnCancel" data-form="commentCancel">취소</button>
+                                <button id="btnComment" data-form="commentWrite">댓글 작성</button>
+                            </div>
+                        </form>
+                        <!-- 댓글목록 -->
+                        <p>댓글목록</p>
+
+                        <!--댓글 없을때-->
+                        <th:block th:if="${comments.isEmpty()}">
+                            <div class="comment" id="noComment">
+                                <textarea name="" id="" readonly>댓글이 없습니다. 댓글을 남겨주세요</textarea>
+                            </div>
+                        </th:block>
+                        <!--로그인한 경우에만 조회-->
+                        <th:block th:unless="${#authentication.principal eq 'anonymousUser'}">
+                            <!--다른사람이 작성한 댓글-->
+                            <th:block th:each="comment, loop:${comments}">
+                            <div class="comment" th:if="${comment.uid} != ${#authentication.principal.user.uid}">
+                                <p><span>[[${comment.nick}]]</span>&nbsp;&nbsp;<span th:text="${#temporals.format(comment.rdate,'yyyy-MM-dd')}"></span></p>
+                                <textarea name="" readonly>[[${comment.content}]]</textarea>
+                            </div>
+                            <!--내가 작성한 댓글 : 작성 당사자와 관리자만 수정, 삭제 버튼 출력 -->
+                            <div class="comment" th:if="${comment.uid} == ${#authentication.principal.user.uid} or ${#authentication.principal.user.role} == 'ADMIN'">
+                                <p><span>[[${comment.nick}]]</span>&nbsp;&nbsp;<span th:text="${#temporals.format(comment.rdate,'yyyy-MM-dd')}"></span></p>
+                                <textarea name="" readonly>[[${comment.content}]]</textarea>
+                                <div>
+                                    <button id="commentModify" data-mode ='modify' th:data-cno="${comment.cno}">수정</button>
+                                    <button id="commentRemove" data-mode ='remove' th:data-cno="${comment.cno}">삭제</button>
+                                </div>
+                            </div>
+                            </th:block>
+                        </th:block>
+                    </div>
+                </div>
+            </div>
+        </main>
+</div>

@@ -1,0 +1,65 @@
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{/layout/adminLayout}">
+
+<main layout:fragment="content">
+
+        <aside>
+            <h3>주요기능</h3>
+            <ul>
+                <li class="on"><a th:href="@{/admin/product/list}">상품관리</a></li>
+                <li><a th:href="@{/admin/order/list}">주문관리</a></li>
+                <li><a th:href="@{/admin/user/list}">회원관리</a></li>
+            </ul>
+        </aside>
+        <section id="orderList">
+            <nav>
+                <h3>회원목록</h3>
+            </nav>
+
+            <article>
+
+                <table border="0">
+                    <tr>
+                        <th>순서</th>
+                        <th>아이디</th>
+                        <th>이름</th>
+                        <th>별명</th>
+                        <th>휴대폰</th>
+                        <th>등급</th>
+                        <th>가입일</th>
+                        <th>확인</th>
+                    </tr>
+                    <tr th:each="user,index : ${userResponseDTO.dtoList}">
+                        <td th:text="${index.index+1}"></td>
+                        <td th:text="${user.uid}"></td>
+                        <td th:text="${user.name}"></td>
+                        <td th:text="${user.nick}"></td>
+                        <td th:text="${user.hp}"></td>
+                        <td th:text="${user.level}"></td>
+                        <td th:text="${#temporals.format(user.regDate, 'yy-MM-dd')}"></td>
+                        <td><a th:href="@{/admin/user/view(uid=${user.uid})}">[상세확인]</a></td>
+                    </tr>
+                </table>
+
+                <!-- 페이징 처리 -->
+                <p class="paging">
+                    <th:block th:if="${userResponseDTO.prev}">
+                        <a th:href="@{/admin/user/list(pg=${userResponseDTO.start - 1})}">이전</a>
+
+                    </th:block>
+                    <th:block th:each="n : ${#numbers.sequence(userResponseDTO.start, userResponseDTO.end)}">
+                        <a th:if="${userResponseDTO.keyword == null}" th:href="@{/admin/user/list(pg=${n})}" th:text="${n}"></a>
+
+                    </th:block>
+                    <th:block th:if="${userResponseDTO.next}">
+                        <a th:if="${userResponseDTO.keyword == null}" th:href="@{/admin/user/list(pg=${userResponseDTO.end + 1})}">다음</a>
+
+                    </th:block>
+                </p>
+
+
+            </article>
+        </section>
+    </main>
+

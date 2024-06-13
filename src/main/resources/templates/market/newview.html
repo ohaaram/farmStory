@@ -1,0 +1,364 @@
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{/layout/newUserLayout}">
+
+<div class="container" layout:fragment="content">
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>farmPlus</title>
+    <link rel="stylesheet" th:href="@{/newcss/mainStyle.css}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.min.js"></script>
+    <script>
+        window.onload = function(){
+            const score1 = [[${reviewRatioDTO.percent1}]];
+            const score2 = [[${reviewRatioDTO.percent2}]];
+            const score3 = [[${reviewRatioDTO.percent3}]];
+            const score4 = [[${reviewRatioDTO.percent4}]];
+            const score5 = [[${reviewRatioDTO.percent5}]];
+            // 리뷰로 스크롤 이동 //
+            const prodReviewBox = document.getElementsByClassName('prodReviewBox')[0];
+            const moveReview = document.getElementsByClassName('moveReview')[0];
+            moveReview.onclick = function (){
+                prodReviewBox.scrollIntoView();
+            }
+            // 별점 그래프
+            new Chart(document.getElementById("pie-chart"), {
+                type: 'pie',
+                data: {
+                    labels: ["1점", "2점", "3점", "4점", "5점"],
+
+                    datasets: [{
+                        label: "ReviewScore (percent)",
+                        backgroundColor: ["#FFF8E1", "#187498","#F9D923","#EB5353","#36AE7C"],
+                        data: [score1,score2,score3,score4,score5]
+                    }]
+                },
+                options: {
+                    // 크기 조절을 위해 false
+                    responsive: false,
+                    title: {
+                        display: true,
+                    }
+                }
+            });
+            // 플러스 버튼 클릭 시 수량 증가
+            document.querySelector('.plus-btn').onclick = function() {
+            //document.querySelector('.plus-btn').addEventListener('click', function() {
+                const quantityInput = document.querySelector('.quantity');
+                let value = parseInt(quantityInput.value);
+                value = isNaN(value) ? 0 : value;
+                quantityInput.value = value + 1;
+                changePrice();
+            };
+
+            // 마이너스 버튼 클릭 시 수량 감소
+            document.querySelector('.minus-btn').onclick = function() {
+            //document.querySelector('.minus-btn').addEventListener('click', function() {
+                const quantityInput = document.querySelector('.quantity');
+                let value = parseInt(quantityInput.value);
+                value = isNaN(value) ? 0 : value;
+                if (value > 1) {
+                    quantityInput.value = value - 1;
+                }
+                changePrice();
+            };
+
+            // 수량 변경시 합계 가격 변동 코드
+            const count = document.getElementById('count');
+            const totalPrice = document.getElementById('totalPrice');
+            const price = document.getElementById('price');
+            const finalPoint = document.getElementById('finalPoint');
+            const finalPrice = document.getElementById('finalPrice');
+
+            function changePrice() {
+                // 할인 적용 금액
+                let StringPrice = price.innerText;
+                let IntPrice = parseInt(StringPrice.replace(/,/g, ''));
+                let total = count.value * IntPrice;
+                console.log(count.value);
+                console.log(price.innerText);
+
+                totalPrice.innerText = total.toLocaleString();
+                console.log(total);
+                // 적립 포인트
+                let totalPoint = total / 10;
+                finalPoint.innerText = totalPoint.toLocaleString();
+                console.log(totalPoint);
+                // 최종 금액
+                finalPrice.innerText = total.toLocaleString();
+            }
+
+            // 바로구매 버튼 클릭시 market/order로 이동 //
+            const btnOrder = document.getElementById('btnOrder');
+            btnOrder.onclick = function (){
+                // 로그인 여부 확인 (난 천재인듯)?
+                const loginCheck = document.getElementById('uid');
+
+                if (loginCheck == null){
+                    let result = confirm("로그인 후 사용하실 수 있습니다. \n 로그인페이지로 이동하시겠습니까?");
+                    if (result){
+                        window.location.href = `/farmstory/user/login`;
+                    }
+                }else {
+                    const prodCount = document.getElementsByName('prodCount')[0].value;
+                    const uid = document.getElementById('uid').value;
+                    const prodno = document.getElementById('prodno').value;
+
+                    const jsonData = {
+                        "uid": uid,
+                        "prodno": prodno,
+                        "prodCount": prodCount
+                    };
+                    fetch("/farmstory/market/moveOrder", {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(jsonData)
+                    })
+                        .then(Response => {
+                            console.log(Response);
+                            if (Response.ok) {
+                                window.location.href = '/farmstory/market/neworder';
+                            }
+                        })
+                        .catch(err => console.log(err))
+                }
+            }
+
+            // 장바구니 버튼 클릭시 //
+            const btnCart = document.getElementById('btnCart');
+            btnCart.onclick = function (){
+                // 로그인 여부 확인
+                const loginCheck = document.getElementById('uid');
+
+                if (loginCheck == null){
+                    let result = confirm("로그인 후 사용하실 수 있습니다. \n 로그인페이지로 이동하시겠습니까?");
+                    if (result){
+                        window.location.href = `/farmstory/user/login`;
+                    }
+                }else{
+                    const prodCount = document.getElementsByName('prodCount')[0].value;
+                    const uid = document.getElementById('uid').value;
+                    const prodno = document.getElementById('prodno').value;
+
+                    const jsonData = {
+                        "uid" : uid,
+                        "prodno" : prodno,
+                        "prodCount" : prodCount
+                    };
+                    fetch("/farmstory/market/addCart", {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(jsonData)
+                    })
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('추가에 실패했습니다.');
+
+                            }
+                            return response.json()
+                        })
+                        .then(data => {
+                            if (data.data === "추가 성공"){
+                                let result = confirm("장바구니에 상품을 추가했습니다.\n 장바구니로 이동하시겠습니까?");
+                                if (result) {
+                                    window.location.href = `/farmstory/market/newcart?uid=${uid}`;
+                                }
+                            }else if (data.data === "추가 실패"){
+                                let result = confirm("이미 장바구니에 존재하는 상품입니다.\n 장바구니로 이동하시겠습니까?");
+                                if (result) {
+                                    window.location.href = `/farmstory/market/newcart?uid=${uid}`;
+                                }
+                            }
+                        })
+                        .catch(err => console.log(err))
+                }
+            }
+        }
+        // 리뷰 페이지 넘긴 후 페이지 로드 시 리뷰 목록으로 스크롤 이동
+        document.addEventListener("DOMContentLoaded", function() {
+            const prodReviewBox = document.getElementsByClassName('prodReviewBox')[0];
+            const url = location.href;
+            const aa = url.split('&aa=')[1];
+
+            if(aa != null) {
+                // 모든 요소가 로드된 이후에 실행되어야 하기 때문에 timeout 걸어줌
+                setTimeout(() => {
+                    prodReviewBox.scrollIntoView();
+                }, 10);
+            }
+        });
+    </script>
+
+        <main class="articleMain">
+            <div class="sideBox">
+                <img th:src="@{/newimage/farm_market_logo.png}" alt="">
+                <ul>
+                    <li><a class="tabOn" th:href="@{/market/newlist}">장보기</a></li>
+                    <li><a class="" th:if="${#authorization.expression('isAuthenticated()')}" th:href="@{/market/newcart(uid=${#authentication.principal.user.uid})}">장바구니</a></li>
+                    <li><a class="" th:if="${!#authorization.expression('isAuthenticated()')}" th:href="@{/user/login}">장바구니</a></li>
+                    <li><a class="" th:if="${#authorization.expression('isAuthenticated()')}" th:href="@{/market/orderList(uid=${#authentication.principal.user.uid}, pg=1)}">주문조회</a></li>
+                    <li><a class="" th:if="${!#authorization.expression('isAuthenticated()')}" th:href="@{/user/login/}">주문조회</a></li>
+                </ul>
+            </div>
+
+            <div class="contentBox">
+                <div class="articleHeader">
+                    <h2>장보기</h2>
+                    <h5>HOME > 장보기 > <span>장보기</span></h5>
+                </div>
+
+                <div class="articleBox">
+                    <h3>기본정보</h3>
+                    <div class="prodInfoBox">
+                        <div class="prodImg">
+                            <img th:src="@{'/imagePath/'+${productDTO.titleImg}}" th:alt="${productDTO.prodname}" alt="">
+                            <input type="hidden" id="uid" th:if="${#authorization.expression('isAuthenticated()')}" th:value="${#authentication.principal.user.uid}">
+                            <input type="hidden" id="prodno" th:value="${productDTO.prodno}">
+                        </div>
+                        <div class="pordInfo">
+                        <!-- 제품 이름과 수량 -->
+                            <h2>
+                                <span class="prodTitle">[[${productDTO.prodname}]]</span>
+                                <span th:if="${productDTO.amount} >= 1000" th:text="(${productDTO.amount}/1000)+'kg'"></span>
+                                <span th:if="${productDTO.amount} < 1000" th:text="${productDTO.amount}+'g'"></span>
+                            </h2>
+                            <h4 class="moveReview" style="width: 100px;">리뷰 <span th:text="${reviewPage.dtoList.size()}"></span> 건</h4>
+                            <h3><span id="discount">[[${productDTO.discount}]]</span>%</h3>
+                            <!-- 정가 포맷팅 -->
+                            <h3>
+                                <s th:text="${#numbers.formatInteger(productDTO.price, 1, 'COMMA')}"></s>원
+                            </h3>
+                            <!-- 할인된 가격 포맷팅 -->
+                            <h2>
+                                <span id="price" th:text="${#numbers.formatInteger((productDTO.price - (productDTO.price * productDTO.discount / 100)), 1, 'COMMA')}"></span>원
+                            </h2>
+                            <!-- 100g 당 가격 포맷팅 -->
+                            <h5>(100g 당
+                                <span th:text="${#numbers.formatInteger(((productDTO.price - (productDTO.price * productDTO.discount / 100)) / productDTO.amount) * 100, 2, 'COMMA')}"></span>원)
+                            </h5>
+                            <h5>재고 <span>[[${productDTO.stock}]]</span>개</h5>
+                            <h4>구매금액의 <span>10</span>% 팜포인트 적립 예정</h4>
+                            <h3>
+                                <span th:text="${#temporals.format(#temporals.createNow().plusDays(2), 'MM-dd')}"></span>도착 예정
+                            </h3>
+
+                            <div class="totalPriceBox">
+                                <div class="totalPrice">
+                                    <h4>
+                                        <span class="prodTitle">[[${productDTO.prodname}]]</span>
+                                        <span th:if="${productDTO.amount} >= 1000" th:text="(${productDTO.amount}/1000)+'kg'"></span>
+                                        <span th:if="${productDTO.amount} < 1000" th:text="${productDTO.amount}+'g'"></span>
+                                    </h4>
+                                    <div class="quantity-input">
+                                        <button class="minus-btn" type="button">-</button>
+                                        <input type="text" class="quantity" th:name="prodCount" min="1" value="1" id="count">
+
+                                        <button class="plus-btn" type="button">+</button>
+                                    </div>
+                                    <h4><span id="totalPrice" th:text="${#numbers.formatInteger((productDTO.price - (productDTO.price * productDTO.discount / 100)), 0, 'COMMA')}"></span>원</h4>
+                                </div>
+                                <div class="priceFlex">
+                                    <h3>적립예정포인트</h3>
+                                    <h2><span id="finalPoint" th:text="${#numbers.formatInteger(((productDTO.price - (productDTO.price * productDTO.discount / 100)) / 10), 0, 'COMMA')}"></span>P</h2>
+                                </div>
+                                <div class="priceFlex">
+                                    <h3>구매예정금액</h3>
+                                    <h2><span id="finalPrice" th:text="${#numbers.formatInteger((productDTO.price - (productDTO.price * productDTO.discount / 100)), 0, 'COMMA')}"></span>원</h2>
+                                </div>
+                            </div>
+
+                            <div class="prodBtn">
+                                <button id="btnCart">장바구니</button>
+                                <button id="btnOrder">바로구매</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="prodContent">
+                        <h3>상품설명</h3>
+                        <img th:src="@{'/imagePath/'+${productDTO.contentImg}}" th:alt="${productDTO.prodname}">
+                    </div>
+
+                    <h3>배송정보</h3>
+                    <div class="delivery">
+                        <p>
+                            입금하신 이후 택배송장번호는 SMS(문자서비스)를 통해 고객님께 안내해드립니다.
+                        </p>
+                    </div>
+                    <h3>교환/반품</h3>
+                    <div class="exchange">
+                        <table border="0">
+                            <tr>
+                                <td>교환 반품이 가능한 경우</td>
+                                <td>
+                                    <ul>
+                                        <li>팜스토리 상품에 하자가 있거나 불량인 경우</li>
+                                        <li>채소, 과일, 양곡등의 식품은 만1일 이내</li>
+                                        <li>기타 상품은 수령일로부터 영업일 기준 일주일 이내</li>
+                                        <li>받으신 상품이 표시사항과 다른 경우에는 받으신 날로부터 일주일 이내</li>
+                                    </ul>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>교환 반품이 불가능한 경우</td>
+                                <td>
+                                    <ul>
+                                        <li>신선 식품의 경우 단순히 마음에 들지 않는 경우</li>
+                                        <li>단순 변심으로 상품이 가치가 훼손돼서 판매가 어려운 경우</li>
+                                    </ul>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="prodReviewBox">
+                    <div class="prodReviewHeader">
+                        <div>
+                            <h3>상품 리뷰</h3>
+                            <p>상품 리뷰 <span th:text="${reviewPage.dtoList.size()}"></span>건</p>
+                            <br>
+                            <h3>평균</h3>
+                            <h1 th:text="${#numbers.formatDecimal(reviewRatioDTO.avg, 0, 'POINT', 2, 'POINT')}"> 점</h1>
+                        </div>
+                        <canvas id="pie-chart" width="400" height="250"></canvas>
+                    </div>
+                    <h3>리뷰 목록</h3>
+                    <th:block th:each="review, loop:${reviewPage.dtoList}">
+                    <div class="prodReview">
+                        <!-- <img th:src="@{'/newimage/farm_review_star' + ${review.score}.png}"> 아마 될듯? 안되네요...ㅜ-->
+                        <p><b>[[${review.nick}]]</b>
+                            <img th:if="${review.score} == 1 " th:src="@{/newimage/farm_review_star1.png}" alt="oneStar">
+                            <img th:if="${review.score} == 2 " th:src="@{/newimage/farm_review_star2.png}" alt="oneStar">
+                            <img th:if="${review.score} == 3 " th:src="@{/newimage/farm_review_star3.png}" alt="oneStar">
+                            <img th:if="${review.score} == 4 " th:src="@{/newimage/farm_review_star4.png}" alt="oneStar">
+                            <img th:if="${review.score} == 5 " th:src="@{/newimage/farm_review_star5.png}" alt="oneStar">
+                            <span  th:text="${#temporals.format(review.rdate,'yyyy-MM-dd')}">24.03.22</span></p>
+                        <div>
+                            <img th:if="${review.thumbnail} != null" th:src="@{'/imagePath/'+${review.thumbnail}}" th:alt="${review.rno}" style="width: 120px; height: 120px ">
+                            <img th:if="${review.thumbnail} == null" th:src="@{/newimage/noReview.png}" th:alt="${review.rno}" style="width: 120px; height: 120px ">
+                            <textarea readonly>[[${review.comment}]]</textarea>
+                        </div>
+                    </div>
+                    </th:block>
+                    <!-- 페이지 -->
+                    <div class="PageBox" th:if="${!reviewPage.dtoList.isEmpty()}">
+                        <ul>
+                            <li th:if="${reviewPage.prev}">
+                                <a th:href="@{/market/newview(prodno=${productDTO.prodno}, rpg=${reviewPage.start - 1}, aa='a')}">이전</a>
+                            </li>
+                            <li th:each="n : ${#numbers.sequence(reviewPage.start, reviewPage.end)}">
+                                <a th:href="@{/market/newview(prodno=${productDTO.prodno}, rpg=${n}, aa='a')}" th:classappend="${reviewPage.rpg == n} ? 'pageOn' : 'page-link'" th:text="${n}"></a>
+                            </li>
+                            <li th:if="${reviewPage.next}">
+                                <a th:if="${marketPageRequestDTO.keyword == null}" th:href="@{/market/newview(prodno=${productDTO.prodno}, rpg=${reviewPage.end + 1}, aa='a')}">다음</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+</html>

@@ -1,0 +1,483 @@
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{/layout/newUserLayout}">
+
+<div class="container" layout:fragment="content">
+    <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+    <script th:src="@{/js/util.js}"></script>
+
+    <script>
+        window.onload = function () {
+
+            let isPointOk = false;
+            let isNameOk = false;
+            let isZipOk = false;
+            let isHpOk = false;
+
+            const havingPoint = parseInt(document.getElementById('havingPoint').innerText, 10);//보유포인트
+            const usingPoint = document.getElementById('usingPoint');
+            //// 페이지 로드시 장바구니 상품 합계 금액 표시 ////
+            orderPriceSub();
+
+            //포인트 사용 시작
+
+            usingPoint.addEventListener('blur', function (event) {//입력필드를 벗어나기 전까지 아무런 액션이 없음(blur)
+                const totalOrder = document.getElementById('totalOrder').innerText.replace(/,/g, '');
+                const resultPoint = document.getElementById('resultPoint');
+                const inputUsingPoint = document.getElementById('inputUsingPoint').innerText.replace(/,/g, '');
+                const inputPoint = parseInt(event.target.value, 10);
+
+                if ((parseInt(totalOrder)+parseInt(inputUsingPoint)) >= inputPoint){
+                    if (!isNaN(havingPoint) && !isNaN(inputPoint)) {//포인트 사용시
+                        if (havingPoint >= inputPoint) {
+                            resultPoint.innerText = "사용 가능합니다.";
+                            resultPoint.style.color = '#1ba41b';
+                            isPointOk = true;
+
+                        } else {
+                            resultPoint.innerText = "포인트가 부족합니다.";
+                            resultPoint.style.color = 'red';
+
+                            isPointOk = false;
+                        }
+                    } else {
+                        resultPoint.innerText = "숫자만 입력!";
+                        resultPoint.style.color = 'red';
+                        usingPoint.value = "0";
+                        isPointOk = false;
+                    }
+                }else{
+                    resultPoint.innerText = "결제금액을 초과할 수 없음";
+                    resultPoint.style.color = 'red';
+                    usingPoint.value = "0";
+                    isPointOk = false;
+                }
+
+
+            });
+
+            const inputUsingPoint = document.getElementById('inputUsingPoint');
+            const btnPoint = document.getElementById('btnPoint');
+
+            //포인트 사용버튼을 눌렀을때 이벤트
+            btnPoint.onclick = function (e) {
+                e.preventDefault();
+
+                // 사용자가 입력한 포인트 값을 가져옴
+                const inputPoint = parseInt(usingPoint.value, 10);
+
+                if (havingPoint >= inputPoint) {
+                    inputUsingPoint.innerText = inputPoint.toLocaleString();
+                    console.log("inputPoint:" + inputPoint);
+
+                    orderPriceSub();
+                }
+            }//포인트 사용끝!
+
+
+            //우편번호 검색 시작
+            const btnZip = document.getElementById('btnZip');
+            btnZip.onclick = function () {
+                postcode();
+            }//우편번호 검색 끝
+
+            ////////////////////////////////////////결제하기 버튼 시작//////////////////////////////////////////////
+            //(받는사람의 정보 저장)
+            const btnPay = document.getElementById('btnPay');
+
+            btnPay.onclick = async function (e) {
+
+                const zip = document.getElementsByName('zip')[0].value;
+                const addr1 = document.getElementsByName('addr1')[0].value;
+                const addr2 = document.getElementsByName('addr2')[0].value;
+                const receiverHp = document.getElementsByClassName('receiverHp')[0].value;
+                const reciver = document.getElementsByName('receiverName')[0].value;
+                const receiverMemo = document.getElementsByClassName('receiverMemo')[0].value;
+                const uid = document.getElementsByClassName('name')[0].dataset.id;
+                const paymentTag = document.getElementsByName('payment');
+                const recaddr = zip + "_" + addr1 + "_" + addr2;
+
+                let payment = "";
+                Array.from(paymentTag).forEach(function (pay){
+                    if (pay.checked) {
+                        payment = pay.value;
+                    }
+                })
+
+                console.log("payment : " + payment);
+
+                e.preventDefault();
+
+                if (reciver !== '') {
+                    isNameOk = true;
+                }
+                if (receiverHp !== '') {
+                    isHpOk = true;
+                }
+                if (zip !== '') {
+                    isZipOk = true;
+                }
+                if (usingPoint.value === "0") {//사용하지 않아도 true
+                    isPointOk = true;
+                }
+
+
+                if (isZipOk && isNameOk && isHpOk) {
+
+                    if (isPointOk === false) {
+                        alert("포인트가 부족합니다.");
+                    } else {
+
+                        console.log("값 다 넣었네?");
+
+
+                        //1. 받는 사람의 정보를 저장
+                        const jsonData = {
+                            "recaddr": recaddr,
+                            "reciver": reciver,
+                            "rechp": receiverHp,
+                            "memo": receiverMemo,
+                            "payment": payment,
+                            "uid": uid
+                        };
+
+                        console.log("jsonData 찍어보기 : " + jsonData);
+
+                        const orderNo = await fetchPost(`/farmstory/market/orders`, jsonData);//orders에 저장할 값 보냄
+
+                        console.log("입력한 사용자의 orderNo가 잘 만들어 졌는지 체크! : " + orderNo.orderNo);
+
+                        console.log("사용하는 포인트값 찍어보기 : " + usingPoint.value);
+
+
+                        //여기에 적립 포인트를 넣어보자
+
+                        // totalPoint 요소의 텍스트 값을 가져와서 출력하는 스크립트
+                        const addPointElement = document.getElementById("totalPoint");
+                        const addPoint = addPointElement.textContent.trim().replace(/,/g, ''); // 적립 포인트
+                        console.log("적립 포인트 : " + addPoint); // 적립 포인트 값 출력
+
+
+                        let point = havingPoint + parseInt(addPoint) - parseInt(usingPoint.value);
+
+                        console.log("point : "+point);
+
+                        //사용한 포인트 차감
+                        await fetchGet(`/farmstory/market/point/${uid}/${point}`);
+
+
+                        //(장바구니 비우기)-cart_product에 있는 cartNo를 이용해서 다 삭제
+                        //prodNo를 받아와서 장바구니에 있는거 다 삭제 -ok!
+                        const prodQuantities = document.querySelectorAll('.prodQnty');
+
+                        const quantityArray = Array.from(prodQuantities);
+
+                        const productList = [];
+                        quantityArray.forEach(quantityElement => {
+                            const quantity = quantityElement.textContent; // 수량 요소의 텍스트 내용
+                            const prodNoInput = quantityElement.nextElementSibling; // 형제 요소인 숨겨진 입력란 가져오기
+                            const prodNo = prodNoInput.value; // 숨겨진 입력란의 값 가져오기
+                            console.log("prodno :" + prodNo);
+                            console.log("quantity :" + quantity);
+                            productList.push({quantity, prodNo}); // 필요한 데이터를 객체에 담아 리스트에 추가
+                        });
+
+                        await fetchPost(`/farmstory/market/cartProdDelete`, productList);//리스트에 담긴 객체를 보내주기
+
+                        //(orderDetail에 추가)
+                        const counts = [];
+                        const detailNos = [];
+
+                        const prodCountElements = document.querySelectorAll('[id="count"]');
+                        const detailNoElements = document.querySelectorAll('[name="detailNo"]');
+
+
+                        prodCountElements.forEach(element => {
+                            counts.push(element.textContent.trim());
+                            console.log("counts" + counts);
+                        });
+
+                        detailNoElements.forEach(element => {
+                            detailNos.push(element.value);
+                            console.log("detailNos" + detailNos);
+                        });
+
+
+                        const dataSon = {
+                            "counts": JSON.stringify(counts),
+                            "detailNos": JSON.stringify(detailNos),
+                            "orderNo": JSON.stringify(orderNo.orderNo)
+                        };
+
+                        const response = await fetchPost(`/farmstory/market/saveOrderDetail`, dataSon);
+
+                        if (response.result > 0) {
+
+                            alert("주문이 성공적으로 완료되었습니다.");
+                            window.location.href = "/farmstory/market/orderList?uid=" + uid;
+                        } else {
+
+                            alert("결제에 실패하였습니다.");
+                        }
+                    }
+                } else {
+                    alert("기본 정보를 빠짐없이 입력해주세요");
+                }
+
+            }//결제하기 버튼 끝
+
+
+        } //window.onload 끝//
+
+        //// 각 장바구니 품목 가격 합산하는 함수 ////
+        function orderPriceSub(usingPoint = 0) {
+
+            let totalProdCount = 0;
+            let totalProdPrice = 0;
+            let totalProdDisPrice = 0;
+            let totalProdDelCost = 0;
+            let totalProdPoint = 0;
+            let totalProdTotal = 0;
+
+
+            const totalCount = document.getElementById('totalCount');
+            const totalPrice = document.getElementById('totalPrice');
+            const totalDiscount = document.getElementById('totalDiscount');
+            const totalDelCost = document.getElementById('totalDelCost');
+            const totalPoint = document.getElementById('totalPoint');
+            const totalOrder = document.getElementById('totalOrder');
+
+            const inputUsingPoint = document.getElementById('inputUsingPoint');
+            const prodCount = document.getElementsByName('prodCount');
+            const prodPrice = document.getElementsByName('prodPrice'); // 할인 전 가격
+            const prodPoint = document.getElementsByName('prodPoint');
+            const prodDisPrice = document.getElementsByName('prodDisPrice');
+
+            console.log("usingPoint : " + usingPoint);
+
+
+            // 각 포인트, 가격, 할인, 합계값 더하는 for문
+            for (let i = 0; i < prodPoint.length; i++) {
+                totalProdCount += 1;
+                totalProdPrice += parseInt(prodPrice[i].innerText.replace(/,/g, ''));
+                totalProdDisPrice += (parseInt(prodPrice[i].innerText.replace(/,/g, '')) - parseInt(prodDisPrice[i].innerText.replace(/,/g, '')));
+                totalProdTotal += parseInt(prodDisPrice[i].innerText.replace(/,/g, ''));
+                totalProdPoint += (parseInt(prodDisPrice[i].innerText.replace(/,/g, '')) / 10);
+
+                if (totalProdTotal >= 30000) {
+                    totalProdDelCost = 0;
+                } else {
+                    totalProdDelCost = 5000;
+                }
+            }
+            // 태그에 값 출력하기
+            totalPrice.innerText = totalProdPrice.toLocaleString();
+            totalDiscount.innerText = totalProdDisPrice.toLocaleString();
+            totalDelCost.innerText = totalProdDelCost.toLocaleString();
+            totalOrder.innerText = (totalProdTotal + parseInt(totalDelCost.innerText.replace(/,/g, '')) - inputUsingPoint.innerText.replace(/,/g, '')).toLocaleString();
+
+            let pointCheck = (parseInt((parseInt(totalOrder.innerText.replace(/,/g, '')) - totalProdDelCost) / 10));//소수점때문에 살짝 수정
+            if (pointCheck < 0) {
+                totalPoint.innerText = "0";
+            }else {
+                totalPoint.innerText = pointCheck.toLocaleString();
+            }
+
+
+        }
+
+        //우편번호 검색을 위한 함수
+        function postcode() {
+            new daum.Postcode({
+                oncomplete: function (data) {
+                    // 팝업에서 검색결과 항목을 클릭했을때 실행할 코드를 작성하는 부분.
+
+                    // 각 주소의 노출 규칙에 따라 주소를 조합한다.
+                    // 내려오는 변수가 값이 없는 경우엔 공백('')값을 가지므로, 이를 참고하여 분기 한다.
+                    var addr = ''; // 주소 변수
+                    var extraAddr = ''; // 참고항목 변수
+
+                    //사용자가 선택한 주소 타입에 따라 해당 주소 값을 가져온다.
+                    if (data.userSelectedType === 'R') { // 사용자가 도로명 주소를 선택했을 경우
+                        addr = data.roadAddress;
+                    } else { // 사용자가 지번 주소를 선택했을 경우(J)
+                        addr = data.jibunAddress;
+                    }
+
+                    // 우편번호와 주소 정보를 해당 필드에 넣는다.
+                    document.getElementsByName('zip')[0].value = data.zonecode;
+                    document.getElementsByName("addr1")[0].value = addr;
+                    // 커서를 상세주소 필드로 이동한다.
+                    document.getElementsByName("addr2")[0].focus();
+                }
+            }).open();
+        }//우편번호 검색 함수 끝!
+    </script>
+
+
+    <main class="articleMain">
+        <div class="sideBox">
+            <img th:src="@{/newimage/farm_market_logo.png}" alt="">
+            <ul>
+                <li><a class="" th:href="@{/market/newlist}">장보기</a></li>
+                <li><a class="" th:if="${#authorization.expression('isAuthenticated()')}" th:href="@{/market/newcart(uid=${#authentication.principal.user.uid})}">장바구니</a></li>
+                <li><a class="" th:if="${!#authorization.expression('isAuthenticated()')}" th:href="@{/user/login}">장바구니</a></li>
+                <li><a class="" th:if="${#authorization.expression('isAuthenticated()')}" th:href="@{/market/orderList(uid=${#authentication.principal.user.uid}, pg=1)}">주문조회</a></li>
+                <li><a class="" th:if="${!#authorization.expression('isAuthenticated()')}" th:href="@{/user/login/}">주문조회</a></li>
+                <li><a class="tabOn" href="">주문/결제</a></li>
+            </ul>
+        </div>
+
+        <div class="contentBox">
+            <div class="articleHeader">
+                <h2>주문/결제</h2>
+                <h5>HOME > 장보기 > <span>주문/결제</span></h5>
+            </div>
+
+            <div class="orderBox">
+                <h3>구매상품</h3>
+                <div class="orderProdBox">
+                    <div class="orderProd" th:each="product : ${productDTOs}">
+                        <img th:src="@{'/imagePath/'+${product.thumb}}" alt="">
+                        <div>
+                            <a th:href="@{/market/newview(prodno=${product.prodno})}">
+                                <b class="prodName">[[${product.prodname}]]</b>
+                                <b th:if="${product.amount} >= 1000" th:text="(${product.amount}/1000)+'kg'"></b>
+                                <b th:if="${product.amount} < 1000" th:text="${product.amount}+'g'"></b>
+                            </a>
+                            <p>
+                                <span><b class="prodDiscount" th:text="${product.discount}" th:name="prodDiscount"></b>%</span>
+                                <span><s class="prodPrice"
+                                         th:text="${#numbers.formatInteger((product.price * product.count), 1, 'COMMA')} + '원'"
+                                         th:name="prodPrice"></s></span>
+                            </p>
+                            <p>
+                                    <span><b class="prodCutPrice"
+                                             th:text="${#numbers.formatInteger(((product.price - (product.price * product.discount / 100)) * product.count), 1, 'COMMA')} + '원'"
+                                             th:name="prodDisPrice">
+                                    </b></span>
+                            </p>
+                        </div>
+                        <div>
+                            <p>
+                                수량 &nbsp<b class="prodQnty" id="count" th:name="prodCount"
+                                           th:text="${product.count}"></b>개
+                                <input type="hidden" name="prodNo" th:value="${product.cart_prodNo}">
+                                <input type="hidden" name="detailNo" th:value="${product.prodno}">
+                            </p>
+                            <span>
+                                    <b class="prodPoint"
+                                       th:text="${#numbers.formatInteger(((product.price - (product.price * product.discount / 100))*10/100) * product.count, 1, 'COMMA')} + ''"
+                                       th:name="prodPoint">
+                                    </b> 팜포인트 적립
+                                </span>
+                        </div>
+                        <div>
+                            <p>
+                                <b class="prodDelDate"
+                                   th:text="${#temporals.format(#temporals.createNow().plusDays(2), 'MM-dd')}"></b> 도착
+                                예정
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="orderbotBox">
+                    <div class="orderInfoBox">
+                        <h3>구매자정보</h3>
+                        <div class="orderConsumerBox">
+                            <table>
+                                <tr>
+                                    <td>이름</td>
+                                    <td th:text="${userDTO.name}" class="name" th:data-id="${userDTO.uid}"></td>
+                                </tr>
+                                <tr>
+                                    <td>이메일</td>
+                                    <td th:text="${userDTO.email}"></td>
+                                </tr>
+                                <tr>
+                                    <td>연락처</td>
+                                    <td><input type="text" class="userHp" th:value="${userDTO.hp}"></td>
+                                </tr>
+                                <tr>
+                                    <td>포인트사용</td>
+                                    <td id="pointTd">
+                                        <p>보유 <b id="havingPoint" th:text="${userDTO.point}"></b> P</p>
+                                        <input type="text" id="usingPoint" th:value="0" style="width: 70px;">
+
+                                        <button type="button" id="btnPoint">사용</button>
+                                        <p id="resultPoint"></p>
+                                        <!--
+                                              <button id="btnPoint">사용</button>
+                                              <p id="overPointMsg"></p>
+                                          -->
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <h3>받는사람정보</h3>
+                        <div class="orderReceiverBox">
+                            <table>
+                                <tr>
+                                    <td>이름</td>
+                                    <td><input type="text" name="receiverName">
+                                        <span id="result_name"></span>
+                                    </td>
+
+                                </tr>
+                                <tr>
+                                    <td>배송 주소</td>
+                                    <td>
+                                        <input type="text" name="zip" readonly>
+                                        <button id="btnZip">우편번호 검색</button>
+                                        <input type="text" name="addr1" placeholder="기본주소 검색">
+                                        <input type="text" name="addr2" placeholder="상세주소 입력">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>연락처</td>
+                                    <td>
+                                        <input type="text" class="receiverHp">
+                                        <span id="result_hp"></span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>결제수단</td>
+                                    <td>
+                                        <fieldset style="border: 0;">
+                                            <label><input type="radio" class="userPayment" name="payment" value="카드결제"> 카드결제</label>
+                                            <label><input type="radio" class="userPayment" name="payment" value="계좌이체"> 계좌이체</label>
+                                        </fieldset>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>메모</td>
+                                    <td><textarea class="receiverMemo"></textarea></td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="orderPayBox">
+                        <h3>결제정보</h3>
+                        <div class="orderPay">
+                            <p>주문예상금액</p>
+                            <p>총 상품 가격<span><b id="totalPrice"></b>원</span></p>
+                            <p>총 할인<span>- <b id="totalDiscount"></b>원</span></p>
+                            <p>배송비<span>+ <b id="totalDelCost"></b>원</span></p>
+                            <p>포인트사용
+                                <span>- <b id="inputUsingPoint">0</b> P</span>
+                            </p>
+                            <p>결제 금액<span><b id="totalOrder"></b>원</span></p>
+                            <p>적립 포인트<span><b id="totalPoint"></b> P</span></p>
+                            <button type="button" id="btnPay">결제하기</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+
+</div>
+</html>

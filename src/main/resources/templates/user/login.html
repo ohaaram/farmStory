@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{/layout/userLayout}">
+
+<div class="container" layout:fragment="content">
+
+    <script th:inline="javascript">
+        /////////////////////////////////////////login////////////////////////////////////////////
+
+        const success = [[${success}]];
+
+        if (success == 100) {
+            alert('로그인에 실패했습니다.\n다시 한번 아이디, 비밀번호를 확인 하시기 바랍니다. 😢');
+        } else if (success == 200) {
+            alert('회원 가입 되었습니다. 😊');
+        } else if (success == 300) {
+            alert('로그아웃 되었습니다. 안녕히 가세요. 😃');
+        }
+
+
+    </script>
+
+    <main>
+        <section class="login">
+            <form th:action="@{/user/login}" method="post" class="form-flex">
+                <table border="0">
+                    <tr>
+                        <td><img th:src="@{/images/login_ico_id.png}" alt="아이디"/></td>
+                        <td>
+                            <input type="text" name="uid" placeholder="아이디 입력"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><img th:src="@{/images/login_ico_pw.png}" alt="비밀번호"/></td>
+                        <td>
+                            <input type="password" name="pass" placeholder="비밀번호 입력"/>
+                        </td>
+
+                        <input type="submit" class="btn btn-primary btn-login" value="로그인"/>
+                    </tr>
+                </table>
+                <div class="link-container">
+                    <a class="small" th:href="@{/user/findId}">아이디 찾기</a> |
+                    <a class="small" th:href="@{/notfound1}">비밀번호 찾기</a>
+                </div>
+                <div class="separate">
+                    <img th:src="@{/images/user/sns_login.png}" alt="sns 로그인 구분">
+                </div>
+
+                <div class="social">
+                    <a th:href="@{/oauth2/authorization/google}">
+                        <img class="google_img" th:src="@{/images/user/google.png}" alt="로그인">
+                    </a>
+
+                    <a th:href="@{/oauth2/authorization/kakao}">
+                        <img class="kakao_img" th:src="@{/images/user/kakao.png}" alt="로그인">
+                    </a>
+                </div>
+            </form>
+            <div>
+                <h3>회원 로그인 안내</h3>
+                <p>아직 회원이 아니시면 회원으로 가입하세요.</p>
+                <a th:href="@{/user/terms}">회원가입</a>
+            </div>
+        </section>
+    </main>
+</div>
+</html>

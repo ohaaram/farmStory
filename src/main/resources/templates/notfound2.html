@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>자연 속으로 사라졌어요</title>
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #DEF2F1;
+            color: #3AAFA9;
+            text-align: center;
+            padding-top: 50px;
+        }
+        h1 {
+            color: #2B7A78;
+            font-size: 2em;
+        }
+        p {
+            color: #3AAFA9;
+        }
+        a {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #2B7A78;
+            color: white;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        a:hover {
+            background-color: #3AAFA9;
+        }
+        .nature-img {
+            margin-top: 30px;
+        }
+        .img{
+            width: 700px;
+            height: 700px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>404: 숲 속 깊은 곳으로 사라졌어요 🌲</h1>
+<p>요청하신 페이지를 자연 속에서 찾을 수 없어요.</p>
+<a th:href="@{/index}">집으로 돌아가기</a>
+<div class="nature-img">
+    <img class="img" th:src="@{/newimage/nature.gif}" alt="자연 이미지">
+</div>
+
+</body>
+</html>

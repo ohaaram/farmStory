@@ -1,0 +1,457 @@
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{/layout/newUserLayout}">
+
+<div class="container" layout:fragment="content">
+
+    <script>
+        window.onload = function(){
+            //// 페이지 로드시 장바구니 상품 합계 금액 표시 ////
+            orderPriceSub();
+
+            //// 수량 조절시 실시간 가격 조정 ////
+            const plusBtns = document.getElementsByClassName('plus-btn');
+            const minusBtns = document.getElementsByClassName('minus-btn');
+
+            // 플러스 버튼 클릭 시 수량 증가
+            Array.from(plusBtns).forEach(function (plusBtn) {
+                plusBtn.addEventListener('click', function(e) {
+                    const quantityInput = e.target.parentNode.querySelector('.quantity');
+                    let value = parseInt(quantityInput.value); // 변경 전 수량
+                    value = isNaN(value) ? 0 : value;
+                    let modValue = value + 1; // 수정된 수량
+                    quantityInput.value = modValue;
+
+                    // 해당 상품 목록 박스 가격 변동 //
+                    const cartInfo = e.target.parentNode.parentNode.parentNode;            // 버튼의 부모의 부모의 부모태그
+                    const prodPrice = cartInfo.querySelector('[name="prodPrice"]');        // 원래 가격 x 수량
+                    const prodDiscount = cartInfo.querySelector('[name="prodDiscount"]');  // 상품 할인율
+                    const prodDisPrice = cartInfo.querySelector('[name="prodDisPrice"]');  // 할인된 가격 x 수량
+                    const prodPoint = cartInfo.querySelector('[name="prodPoint"]');        // 할인된 가격 x 수량 x 10%
+
+                    let intPrice = parseInt(prodPrice.innerText.replace(/,/g, '')); // 콤마 붙어 있는 가격 (String -> int)
+                    console.log(intPrice);
+                    let oneProdPrice = intPrice / value; // 상품 1개 가격, 콤마 제거
+                    console.log(oneProdPrice);
+                    let modProdPrice = oneProdPrice * modValue; // 원래 가격 x 수정된 수량
+                    console.log(modProdPrice);
+                    let modProdDisPrice = (oneProdPrice - (oneProdPrice * parseInt(prodDiscount.innerText) / 100)) * modValue; // 할인된 가격 x 수정된 수량
+                    console.log(modProdDisPrice);
+                    let modProdPoint = modProdDisPrice / 10; // 할인된 가격 x 수정된 수량 x 10%
+                    console.log(modProdPoint);
+
+
+                    prodPrice.innerText = modProdPrice.toLocaleString();
+                    prodDisPrice.innerText = modProdDisPrice.toLocaleString();
+                    prodPoint.innerText = modProdPoint.toLocaleString();
+                    // 전체 주문예상금액 가격 변동 //
+                    orderPriceSub();
+                });
+            })
+
+
+            // 마이너스 버튼 클릭 시 수량 감소
+            Array.from(minusBtns).forEach(function (minusBtn) {
+                minusBtn.addEventListener('click', function(e) {
+                    const quantityInput = e.target.parentNode.querySelector('.quantity');
+                    let value = parseInt(quantityInput.value);
+                    value = isNaN(value) ? 0 : value;
+                    let modValue = value - 1;
+                    if (value > 1) {
+                        quantityInput.value = modValue;
+
+                        // 해당 상품 목록 박스 가격 변동 //
+                        const cartInfo = e.target.parentNode.parentNode.parentNode; // 버튼의 부모의 부모의 부모태그
+                        const prodPrice = cartInfo.querySelector('[name="prodPrice"]'); // 원래 가격 x 수량
+                        const prodDiscount = cartInfo.querySelector('[name="prodDiscount"]'); // 상품 할인율
+                        const prodDisPrice = cartInfo.querySelector('[name="prodDisPrice"]'); // 할인된 가격 x 수량
+                        const prodPoint = cartInfo.querySelector('[name="prodPoint"]'); // 할인된 가격 x 수량 x 10%
+
+                        let intPrice = parseInt(prodPrice.innerText.replace(/,/g, ''));
+                        let oneProdPrice = intPrice / value; // 상품 1개 가격
+                        let modProdPrice = oneProdPrice * modValue; // 원래 가격 x 수정된 수량
+                        let modProdDisPrice = (oneProdPrice - (oneProdPrice * parseInt(prodDiscount.innerText) / 100)) * modValue; // 할인된 가격 x 수정된 수량
+                        let modProdPoint = modProdDisPrice / 10; // 할인된 가격 x 수정된 수량 x 10%
+
+                        prodPrice.innerText = modProdPrice.toLocaleString();
+                        prodDisPrice.innerText = modProdDisPrice.toLocaleString();
+                        prodPoint.innerText = modProdPoint.toLocaleString();
+                        // 전체 주문예상금액 가격 변동 //
+                        orderPriceSub();
+                    }
+                });
+            })
+
+            //// 주문하기 버튼 클릭시 DB에서 수량조절 후 order로 전달 ////
+            const btnOrder = document.getElementsByClassName('btnOrder')[0];
+            btnOrder.onclick = function () {
+                const cart_prodNo = document.getElementsByName('cart_prodNo');
+                const prodCount = document.getElementsByName('prodCount');
+                const uid = document.getElementById('uid').value;
+
+                const modCart_prodNo = []; // cart_product 번호
+                const modCount = []; // 수량
+
+                for (let i = 0; i < cart_prodNo.length; i++) {
+                    const currentProdNo = cart_prodNo[i].value; // 현재 상품 번호
+                    const currentCount = prodCount[i].value; // 현재 수량
+                    modCart_prodNo.push(currentProdNo);
+                    modCount.push(currentCount)
+                }
+
+                const jsonData = {
+                    "cart_prodNo" : modCart_prodNo,
+                    "count" : modCount
+                };
+                const jsonData2 = {
+                    "uid" : uid,
+                    "cart_prodNo" : modCart_prodNo
+                };
+
+                fetch("/farmstory/market/modCount", {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(jsonData)
+                })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('수량 변경에 실패했습니다.');
+                        }
+                        return response.json()
+                    })
+                    .then(data => {
+                        console.log(data);
+                        // 성공일 경우 uid, modCart_prodNo 들고 /market/order로 넘어감
+                        // window.location.href = `/market/order?uid=${uid}&cart_prodNo=${modCart_prodNo}`;
+                        if (data.data === "수량 변경 성공"){
+                            fetch("/farmstory/market/order", {
+                                method: 'POST',
+                                headers: {'Content-Type': 'application/json'},
+                                body: JSON.stringify(jsonData2)
+                            })
+                                .then(Response => {
+                                    console.log(Response);
+                                    if(Response.ok) {
+                                        window.location.href = '/farmstory/market/neworder';
+                                    }
+                                })
+                                .catch(err => console.log(err))
+                        }
+                    })
+                    .catch(err => console.log(err))
+            }
+
+            // 선택을 통한 다중 삭제 //
+            const prodCheckBox = document.querySelectorAll('.prodCheckBox');
+            const btnDeleteProds = document.getElementById('btnDeleteProds');
+
+            btnDeleteProds.onclick = function (e) {
+                // 삭제할 상품의 번호를 저장하는 배열
+                let cart_prodNo = [];
+                let deleteDiv = [];
+                // forEach로 순회하며 checked된 상품의 번호 찾기
+                prodCheckBox.forEach(check => {
+                    if (check.checked){
+                        const checkBox = check;
+                        const div = checkBox.parentNode;
+                        deleteDiv.push(div);
+                        cart_prodNo.push(div.querySelector('[name="cart_prodNo"]').value);
+                    }
+                })
+                // 삭제
+                let result = false;
+                if (cart_prodNo.length != 0){
+                    result = confirm("선택하신 상품을 장바구니에서 삭제하시겠습니까?");
+                }else {
+                    return;
+                }
+                if (result){
+                    const jsonData = {
+                        "cart_prodNo" : cart_prodNo
+                    }
+                    fetch("/farmstory/market/deleteCart", {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(jsonData)
+                    })
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('삭제에 실패했습니다.');
+                            }
+                            return response.json()
+                        })
+                        .then(data => {
+                            if (data.data === "삭제 성공"){
+                                for (let i = 0; i < cart_prodNo.length; i++) {
+                                    console.log(cart_prodNo[i]);
+                                    deleteDiv[i].remove();
+                                }
+                                // 다음 삭제를 위해 배열 비우기
+                                cart_prodNo.length = 0;
+                                deleteDiv.length = 0;
+                                // 전체 주문예상금액 가격 변동 //
+                                orderPriceSub();
+
+                                // 장바구니의 상품이 0개일때
+                                const cartItem = document.getElementsByClassName('cartItem');
+                                if (cartItem.length === 0) {
+                                    const cartBox = document.getElementsByClassName('cartBox')[0];
+                                    const notProd = `<div class="cartItem">
+                                                        <div class="cartInfoBot">
+                                                            <div>
+                                                                <p style="padding: 30px 0;">
+                                                                    <span style="height: 200px; font-size: 20px;">
+                                                                        장바구니에 상품이 없습니다.
+                                                                    </span>
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </div>`
+                                    cartBox.insertAdjacentHTML('beforeend', notProd);
+                                }
+                                ///
+                            }
+                        })
+                        .catch(err => console.log(err))
+                }else {
+                    cart_prodNo.length = 0;
+                    deleteDiv.length = 0;
+                    alert("취소되었습니다.");
+                }
+            }
+
+            //// 개별 상품 삭제 ////
+            const btnDeleteProd = document.getElementsByClassName('btnDeleteProd');
+            Array.from(btnDeleteProd).forEach(function (delProd) {
+                delProd.addEventListener('click', function(e) {
+                    const cartInfo = e.target.parentNode.parentNode.parentNode; // 버튼의 부모의 부모의 부모태그
+                    let cart_prodNo = [];
+
+                    cart_prodNo.push(cartInfo.querySelector('[name="cart_prodNo"]').value);
+                    let result = confirm("해당 상품을 장바구니에서 삭제하시겠습니까?");
+
+                    if (result){
+                        const jsonData = {
+                            "cart_prodNo" : cart_prodNo
+                        }
+                        fetch("/farmstory/market/deleteCart", {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify(jsonData)
+                        })
+                            .then(response => {
+                                if (!response.ok) {
+                                    throw new Error('삭제에 실패했습니다.');
+                                }
+                                return response.json()
+                            })
+                            .then(data => {
+                                if (data.data === "삭제 성공"){
+                                    cartInfo.remove();
+                                    cart_prodNo.length = 0;
+                                    // 전체 주문예상금액 가격 변동 //
+                                    orderPriceSub();
+
+                                    // 장바구니의 상품이 0개일때
+                                    const cartItem = document.getElementsByClassName('cartItem');
+                                    if (cartItem.length === 0) {
+                                        const cartBox = document.getElementsByClassName('cartBox')[0];
+                                        const notProd = `<div class="cartItem">
+                                                        <div class="cartInfoBot">
+                                                            <div>
+                                                                <p style="padding: 30px 0;">
+                                                                    <span style="height: 200px; font-size: 20px;">
+                                                                        장바구니에 상품이 없습니다.
+                                                                    </span>
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </div>`
+                                        cartBox.insertAdjacentHTML('beforeend', notProd);
+                                    }
+                                    ///
+                                }
+                            })
+                            .catch(err => console.log(err))
+                    }else {
+                        cart_prodNo.length = 0;
+                        alert("취소되었습니다.");
+                    }
+
+
+                })
+            })
+
+            //// 전체 선택 ////
+            const totalCheckBox = document.getElementsByClassName('totalCheckBox')[0];
+            let checkedTurn = 0;
+            totalCheckBox.onclick = function (e){
+                if (checkedTurn === 0) {
+                    prodCheckBox.forEach(function(checkbox) {
+                        checkbox.checked = true;
+                    });
+                    checkedTurn = 1;
+                } else {
+                    prodCheckBox.forEach(function(checkbox) {
+                        checkbox.checked = false;
+                    });
+                    checkedTurn = 0;
+                }
+
+            }
+
+        } //window.onload 끝//
+
+        //// 각 장바구니 품목 가격 합산하는 함수 ////
+        function orderPriceSub() {
+            const totalCount = document.getElementById('totalCount');
+            const totalPrice = document.getElementById('totalPrice');
+            const totalDiscount = document.getElementById('totalDiscount');
+            const totalDelCost = document.getElementById('totalDelCost');
+            const totalPoint = document.getElementById('totalPoint');
+            const totalOrder = document.getElementById('totalOrder');
+
+            const prodCount = document.getElementsByName('prodCount');
+            const prodPrice = document.getElementsByName('prodPrice'); // 할인 전 가격
+            const prodPoint = document.getElementsByName('prodPoint');
+            const prodDisPrice = document.getElementsByName('prodDisPrice');
+
+            let totalProdCount = 0;
+            let totalProdPrice = 0;
+            let totalProdDisPrice = 0;
+            let totalProdDelCost = 0;
+            let totalProdPoint = 0;
+            let totalProdTotal = 0;
+
+            // 각 포인트, 가격, 할인, 합계값 더하는 for문
+            for (let i = 0; i < prodPrice.length; i++) {
+                totalProdCount += 1;
+                totalProdPrice += parseInt(prodPrice[i].innerText.replace(/,/g, ''));
+                totalProdDisPrice += (parseInt(prodPrice[i].innerText.replace(/,/g, '')) - parseInt(prodDisPrice[i].innerText.replace(/,/g, '')));
+                totalProdTotal += parseInt(prodDisPrice[i].innerText.replace(/,/g, ''));
+                totalProdPoint += (parseInt(parseInt(prodDisPrice[i].innerText.replace(/,/g, '')) / 10));//소수점 때문에 살짝 수정
+
+                if (totalProdTotal >= 30000) {
+                    totalProdDelCost = 0;
+                }else{
+                    totalProdDelCost = 5000;
+                }
+            }
+            // 태그에 값 출력하기
+            totalPrice.innerText = totalProdPrice.toLocaleString();
+            totalDiscount.innerText = totalProdDisPrice.toLocaleString();
+            totalDelCost.innerText = totalProdDelCost.toLocaleString();
+            totalOrder.innerText = (totalProdTotal+parseInt(totalDelCost.innerText.replace(/,/g, ''))).toLocaleString();
+            totalPoint.innerText = totalProdPoint.toLocaleString();
+        }
+    </script>
+
+    <main class="articleMain">
+        <div class="sideBox">
+            <img th:src="@{/newimage/farm_market_logo.png}" alt="">
+            <ul>
+                <li><a class="" th:href="@{/market/newlist}">장보기</a></li>
+                <li><a class="tabOn" th:if="${#authorization.expression('isAuthenticated()')}" th:href="@{/market/newcart(uid=${#authentication.principal.user.uid})}">장바구니</a></li>
+                <li><a class="tabOn" th:if="${!#authorization.expression('isAuthenticated()')}" th:href="@{/user/login}">장바구니</a></li>
+                <li><a class="" th:if="${#authorization.expression('isAuthenticated()')}" th:href="@{/market/orderList(uid=${#authentication.principal.user.uid}, pg=1)}">주문조회</a></li>
+                <li><a class="" th:if="${!#authorization.expression('isAuthenticated()')}" th:href="@{/user/login/}">주문조회</a></li>
+            </ul>
+        </div>
+
+        <div class="contentBox">
+            <div class="articleHeader">
+                <h2>장바구니</h2>
+                <h5>HOME > 장보기 > <span>장바구니</span></h5>
+            </div>
+
+            <div class="articleBox">
+
+                <div class="cartHeader">
+                    <input type="checkbox" class="totalCheckBox">
+                    <h4>전체선택</h4>
+                    <a id="btnDeleteProds" style="cursor: pointer">선택삭제</a>
+                </div>
+                    <div class="prodInfoBox">
+
+                        <div class="cartBox">
+                            <!--장바구니 품목 시작-->
+                            <div class="cartItem" th:if="${!productDTO.isEmpty()}" th:each="product : ${productDTO}">
+                                <input type="checkbox" class="prodCheckBox">
+                                <input type="hidden" name="cart_prodNo" th:value="${product.cart_prodNo}">
+                                <input type="hidden" id="uid" th:value="${#authentication.principal.user.uid}">
+                                <a class="cartImg" href="">
+                                    <img th:src="@{'/imagePath/'+${product.thumb}}" class="thumb" alt="">
+                                </a>
+
+                                <div class="cartInfo">
+                                    <p>
+                                        <a th:href="@{/market/newview(prodno=${product.prodno})}">
+                                            <b class="prodName">[[${product.prodname}]]</b>
+                                            <b th:if="${product.amount} >= 1000" th:text="(${product.amount}/1000)+'kg'"></b>
+                                            <b th:if="${product.amount} < 1000" th:text="${product.amount}+'g'"></b>
+                                        </a>
+                                        <a class="btnDeleteProd" style="cursor: pointer">삭제</a>
+                                    </p>
+                                    <p>
+                                        <span><b class="prodDiscount" th:text="${product.discount}" th:name="prodDiscount"></b>%</span>
+                                        <span>
+                                            <s class="prodPrice" th:text="${#numbers.formatInteger(product.price * product.count, 1, 'COMMA')} + '원'" th:name="prodPrice"></s>
+                                        </span>
+                                    </p>
+                                    <p>
+                                        <span>
+                                           <b class="prodCutPrice" name="prodDisPrice" th:text="${#numbers.formatInteger((product.price - (product.price * product.discount / 100)) * product.count, 1, 'COMMA')}">
+                                         </b>원
+                                        </span>
+                                    </p>
+
+                                    <div class="cartInfoBot">
+                                        <div>
+                                            <p>
+                                                <span>
+                                                    <b class="prodPoint" name="prodPoint" th:text="${#numbers.formatInteger(((product.price - (product.price * product.discount / 100)) * product.count) * 0.10, 0, 'COMMA')}">
+                                                    </b> 팜포인트 적립
+                                                </span>
+                                            </p>
+                                            <p><span><b class="prodDelDate" th:text="${#temporals.format(#temporals.createNow().plusDays(2), 'MM-dd')}"></b>도착 예정</span></p>
+                                        </div>
+
+                                        <div class="quantity-input">
+                                            <button class="minus-btn" type="button">-</button>
+                                            <input type="text" class="quantity prodQnty" th:name="prodCount" th:value="${product.count}">
+                                            <button class="plus-btn" type="button">+</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!--장바구니에 상품이 없을때-->
+                            <div class="cartItem" th:if="${productDTO.isEmpty()}">
+                                <div class="cartInfoBot">
+                                    <div>
+                                        <p style="padding: 30px 0;">
+                                            <span style="height: 200px; font-size: 20px;">
+                                                장바구니에 상품이 없습니다.
+                                            </span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!--장바구니 품목 끝-->
+
+                    <div class="cartTotal">
+                        <p>주문예상금액</p>
+                        <p>총 상품 가격<span><b id="totalPrice"></b>원</span></p>
+                        <p>총 할인<span>- <b id="totalDiscount"></b>원</span></p>
+                        <p>배송비<span>+ <b id="totalDelCost"></b>원</span></p>
+                        <p>결제 금액<span><b id="totalOrder"></b>원</span></p>
+                        <p>적립 포인트<span><b id="totalPoint"></b> P</span></p>
+                        <button class="btnOrder">주문하기</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+</div>
+</html>
